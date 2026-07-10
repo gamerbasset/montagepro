@@ -1331,6 +1331,34 @@
     osc.stop(now + 0.1);
   }
 
+  function playRemoveSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    // Descending dissonant buzz — feels wrong
+    [400, 300, 180].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+      gain.gain.setValueAtTime(0.15, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.2);
+    });
+    // Low thud at the end
+    const thud = audioCtx.createOscillator();
+    const thudGain = audioCtx.createGain();
+    thud.type = 'sine';
+    thud.frequency.setValueAtTime(80, now + 0.25);
+    thud.frequency.exponentialRampToValueAtTime(40, now + 0.45);
+    thudGain.gain.setValueAtTime(0.2, now + 0.25);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    thud.connect(thudGain).connect(audioCtx.destination);
+    thud.start(now + 0.25);
+    thud.stop(now + 0.45);
+  }
+
   // ===== CART FUNCTIONALITY =====
   let cartCount = 0;
   let cartItems = [];
@@ -1384,6 +1412,7 @@
     // Remove button handlers
     cartDropdownItems.querySelectorAll('.cart-item-remove').forEach(btn => {
       btn.addEventListener('click', function() {
+        playRemoveSound();
         const idx = parseInt(this.dataset.idx);
         const removed = cartItems.splice(idx, 1)[0];
         cartCount = cartItems.length;
