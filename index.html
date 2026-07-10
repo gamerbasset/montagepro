@@ -1803,7 +1803,7 @@
       forgotLink.style.display = '';
       authNameGroup.style.display = 'none';
       authPass2Group.style.display = 'none';
-      authEmail.placeholder = 'البريد الإلكتروني';
+      authEmail.style.display = '';
     } else {
       authTitle.textContent = 'إنشاء حساب';
       authSubtitle.textContent = 'أنشئ حسابك الجديد';
@@ -1812,15 +1812,11 @@
       forgotLink.style.display = 'none';
       authNameGroup.style.display = '';
       authPass2Group.style.display = '';
-      authEmail.placeholder = 'اسم المستخدم';
-      authEmail.type = 'text';
-      authPass.placeholder = 'كلمة المرور';
+      authEmail.style.display = '';
     }
   }
   switchMode.addEventListener('click', () => {
     isLogin = !isLogin;
-    authEmail.type = 'email';
-    authEmail.placeholder = 'البريد الإلكتروني';
     updateAuthUI();
   });
   authClose.addEventListener('click', closeAuth);
