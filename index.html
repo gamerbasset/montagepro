@@ -973,25 +973,58 @@
       <button class="auth-close" id="auth-close"><i class="fas fa-xmark"></i></button>
       <h2 id="auth-title">تسجيل الدخول</h2>
       <p class="auth-subtitle" id="auth-subtitle">أدخل بياناتك للمتابعة</p>
-      <div class="input-group" id="auth-name-group" style="display:none">
-        <input type="text" id="auth-name" placeholder="اسم المستخدم" autocomplete="name">
-        <i class="fas fa-user"></i>
+      <!-- Login & Register Fields -->
+      <div id="auth-form-fields">
+        <div class="input-group" id="auth-name-group" style="display:none">
+          <input type="text" id="auth-name" placeholder="اسم المستخدم" autocomplete="name">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="input-group" id="auth-email-group">
+          <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <div class="input-group" id="auth-pass-group">
+          <input type="password" id="auth-pass" placeholder="كلمة المرور" autocomplete="current-password">
+          <i class="fas fa-lock"></i>
+        </div>
+        <div class="input-group" id="auth-pass2-group" style="display:none">
+          <input type="password" id="auth-pass2" placeholder="تأكيد كلمة المرور" autocomplete="new-password">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <a class="forgot-link" id="forgot-link">نسيت كلمة المرور؟</a>
+        <div class="auth-error" id="auth-error"></div>
       </div>
-      <div class="input-group">
-        <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
-        <i class="fas fa-envelope"></i>
+      <!-- Forgot Password: Step 1 - Enter Email -->
+      <div id="forgot-step1" style="display:none">
+        <div class="input-group">
+          <input type="email" id="forgot-email" placeholder="أدخل بريدك الإلكتروني" autocomplete="email">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <div class="auth-error" id="forgot-error"></div>
       </div>
-      <div class="input-group">
-        <input type="password" id="auth-pass" placeholder="كلمة المرور" autocomplete="current-password">
-        <i class="fas fa-lock"></i>
+      <!-- Forgot Password: Step 2 - Enter Code -->
+      <div id="forgot-step2" style="display:none">
+        <p style="color:#059669;font-size:12px;text-align:center;margin-bottom:14px" id="forgot-code-msg"></p>
+        <div class="input-group">
+          <input type="text" id="forgot-code" placeholder="أدخل رمز التحقق" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px" autocomplete="one-time-code">
+          <i class="fas fa-key"></i>
+        </div>
+        <div class="auth-error" id="code-error"></div>
       </div>
-      <div class="input-group" id="auth-pass2-group" style="display:none">
-        <input type="password" id="auth-pass2" placeholder="تأكيد كلمة المرور" autocomplete="new-password">
-        <i class="fas fa-shield-halved"></i>
+      <!-- Forgot Password: Step 3 - New Password -->
+      <div id="forgot-step3" style="display:none">
+        <div class="input-group">
+          <input type="password" id="new-pass" placeholder="كلمة المرور الجديدة" autocomplete="new-password">
+          <i class="fas fa-lock"></i>
+        </div>
+        <div class="input-group">
+          <input type="password" id="new-pass2" placeholder="تأكيد كلمة المرور الجديدة" autocomplete="new-password">
+          <i class="fas fa-shield-halved"></i>
+        </div>
+        <div class="auth-error" id="newpass-error"></div>
       </div>
-      <a class="forgot-link" id="forgot-link">نسيت كلمة المرور؟</a>
       <button class="auth-btn" id="auth-submit-btn">تسجيل الدخول</button>
-      <div class="divider"><span></span><small>أو</small><span></span></div>
+      <div class="divider" id="auth-divider"><span></span><small>أو</small><span></span></div>
       <button class="google-btn" id="google-btn">
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         تسجيل الدخول بحساب Google
@@ -1769,7 +1802,7 @@
     el.addEventListener('mouseenter', playHoverSound);
   });
 
-  // ===== AUTH MODAL =====
+  // ===== AUTH SYSTEM =====
   const authOverlay = document.getElementById('auth-overlay');
   const authClose = document.getElementById('auth-close');
   const authTitle = document.getElementById('auth-title');
@@ -1780,75 +1813,315 @@
   const authName = document.getElementById('auth-name');
   const authNameGroup = document.getElementById('auth-name-group');
   const authPass2Group = document.getElementById('auth-pass2-group');
+  const authEmailGroup = document.getElementById('auth-email-group');
+  const authPassGroup = document.getElementById('auth-pass-group');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const switchMode = document.getElementById('switch-mode');
   const forgotLink = document.getElementById('forgot-link');
-  let isLogin = true;
+  const authDivider = document.getElementById('auth-divider');
+  const authError = document.getElementById('auth-error');
+  const authFormFields = document.getElementById('auth-form-fields');
+  const forgotStep1 = document.getElementById('forgot-step1');
+  const forgotStep2 = document.getElementById('forgot-step2');
+  const forgotStep3 = document.getElementById('forgot-step3');
+  const forgotEmail = document.getElementById('forgot-email');
+  const forgotCode = document.getElementById('forgot-code');
+  const newPass = document.getElementById('new-pass');
+  const newPass2 = document.getElementById('new-pass2');
+  const forgotError = document.getElementById('forgot-error');
+  const codeError = document.getElementById('code-error');
+  const newpassError = document.getElementById('newpass-error');
+  const forgotCodeMsg = document.getElementById('forgot-code-msg');
 
-  function openAuth() {
-    authOverlay.classList.add('open');
+  let isLogin = true;
+  let authMode = 'login';
+  let currentUser = null;
+  let resetEmail = '';
+  let resetCode = '';
+
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('mp_users')) || {}; }
+    catch(e) { return {}; }
+  }
+  function saveUsers(u) { localStorage.setItem('mp_users', JSON.stringify(u)); }
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem('mp_session')); }
+    catch(e) { return null; }
+  }
+  function saveSession(s) { localStorage.setItem('mp_session', JSON.stringify(s)); }
+  function clearSession() { localStorage.removeItem('mp_session'); }
+
+  function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+  function hideErr(el) { el.style.display = 'none'; }
+
+  function generateCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  function resetAuthView() {
+    authMode = 'login';
+    isLogin = true;
+    authFormFields.style.display = '';
+    authNameGroup.style.display = 'none';
+    authPass2Group.style.display = 'none';
+    authEmailGroup.style.display = '';
+    authPassGroup.style.display = '';
+    forgotLink.style.display = '';
+    authSubmitBtn.style.display = '';
+    authDivider.style.display = '';
+    switchMode.style.display = '';
+    forgotStep1.style.display = 'none';
+    forgotStep2.style.display = 'none';
+    forgotStep3.style.display = 'none';
     authEmail.value = '';
     authPass.value = '';
-    if (authPass2) authPass2.value = '';
-    if (authName) authName.value = '';
-    authEmail.focus();
+    authPass2.value = '';
+    authName.value = '';
+    if (forgotEmail) forgotEmail.value = '';
+    if (forgotCode) forgotCode.value = '';
+    if (newPass) newPass.value = '';
+    if (newPass2) newPass2.value = '';
+    hideErr(authError); hideErr(forgotError); hideErr(codeError); hideErr(newpassError);
+    updateAuthUI();
   }
-  function closeAuth() { authOverlay.classList.remove('open'); }
+
   function updateAuthUI() {
     if (isLogin) {
       authTitle.textContent = 'تسجيل الدخول';
       authSubtitle.textContent = 'أدخل بياناتك للمتابعة';
       authSubmitBtn.textContent = 'تسجيل الدخول';
       switchMode.innerHTML = 'ليس لديك حساب؟ <span>سجل الآن</span>';
-      forgotLink.style.display = '';
       authNameGroup.style.display = 'none';
       authPass2Group.style.display = 'none';
-      authEmail.style.display = '';
     } else {
       authTitle.textContent = 'إنشاء حساب';
       authSubtitle.textContent = 'أنشئ حسابك الجديد';
       authSubmitBtn.textContent = 'إنشاء حساب';
       switchMode.innerHTML = 'لديك حساب بالفعل؟ <span>سجل الدخول</span>';
-      forgotLink.style.display = 'none';
       authNameGroup.style.display = '';
       authPass2Group.style.display = '';
-      authEmail.style.display = '';
     }
   }
-  switchMode.addEventListener('click', () => {
-    isLogin = !isLogin;
-    updateAuthUI();
-  });
+
+  function openAuth(mode) {
+    authMode = mode || 'login';
+    resetAuthView();
+    authOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    authEmail.focus();
+  }
+  function closeAuth() {
+    authOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    resetAuthView();
+  }
+
   authClose.addEventListener('click', closeAuth);
   authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuth(); });
+
+  switchMode.addEventListener('click', () => {
+    isLogin = !isLogin;
+    hideErr(authError);
+    updateAuthUI();
+  });
+
+  // Forgot password flow
+  forgotLink.addEventListener('click', () => {
+    authMode = 'forgot';
+    authTitle.textContent = 'استرجاع الحساب';
+    authSubtitle.textContent = 'أدخل بريدك الإلكتروني لاستلام رمز التحقق';
+    authFormFields.style.display = 'none';
+    forgotStep1.style.display = '';
+    forgotStep2.style.display = 'none';
+    forgotStep3.style.display = 'none';
+    hideErr(forgotError);
+    forgotEmail.focus();
+  });
+
+  // Forgot Step 1: submit email
+  var forgotStep1Btn = document.createElement('button');
+  forgotStep1Btn.className = 'auth-btn';
+  forgotStep1Btn.textContent = 'إرسال رمز التحقق';
+  forgotStep1Btn.style.marginTop = '10px';
+  forgotStep1.appendChild(forgotStep1Btn);
+
+  forgotStep1Btn.addEventListener('click', () => {
+    hideErr(forgotError);
+    const email = forgotEmail.value.trim();
+    if (!email) { showErr(forgotError, 'البريد الإلكتروني مطلوب'); return; }
+    if (!email.includes('@') || !email.includes('.')) { showErr(forgotError, 'البريد الإلكتروني غير صالح'); return; }
+    const users = getUsers();
+    if (!users[email]) { showErr(forgotError, 'لا يوجد حساب بهذا البريد الإلكتروني'); return; }
+
+    resetEmail = email;
+    resetCode = generateCode();
+
+    var resets = {};
+    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
+    resets[email] = { code: resetCode, expires: Date.now() + 10 * 60 * 1000 };
+    localStorage.setItem('mp_resets', JSON.stringify(resets));
+
+    authTitle.textContent = 'التحقق من البريد';
+    authSubtitle.textContent = 'أدخل الرمز المرسل إلى بريدك';
+    forgotStep1.style.display = 'none';
+    forgotStep2.style.display = '';
+    forgotCodeMsg.textContent = 'تم إرسال رمز التحقق إلى: ' + email;
+    hideErr(codeError);
+    console.log('=== RESET CODE ===', resetCode, '===');
+    notify('تم إرسال الرمز', 'رمز التحقق: ' + resetCode);
+    forgotCode.focus();
+  });
+  forgotEmail.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep1Btn.click(); });
+
+  // Forgot Step 2: verify code
+  var forgotStep2Btn = document.createElement('button');
+  forgotStep2Btn.className = 'auth-btn';
+  forgotStep2Btn.textContent = 'تحقق من الرمز';
+  forgotStep2Btn.style.marginTop = '10px';
+  forgotStep2.appendChild(forgotStep2Btn);
+
+  forgotStep2Btn.addEventListener('click', () => {
+    hideErr(codeError);
+    const code = forgotCode.value.trim();
+    if (!code) { showErr(codeError, 'أدخل رمز التحقق'); return; }
+    if (code.length !== 6) { showErr(codeError, 'الرمز يجب أن يكون 6 أرقام'); return; }
+
+    var resets = {};
+    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
+    var resetData = resets[resetEmail];
+    if (!resetData) { showErr(codeError, 'انتهت صلاحية الرمز، حاول مرة أخرى'); return; }
+    if (Date.now() > resetData.expires) { delete resets[resetEmail]; localStorage.setItem('mp_resets', JSON.stringify(resets)); showErr(codeError, 'انتهت صلاحية الرمز (10 دقائق)'); return; }
+    if (code !== resetData.code) { showErr(codeError, 'الرمز غير صحيح'); return; }
+
+    authTitle.textContent = 'كلمة مرور جديدة';
+    authSubtitle.textContent = 'أدخل كلمة المرور الجديدة لحسابك';
+    forgotStep2.style.display = 'none';
+    forgotStep3.style.display = '';
+    hideErr(newpassError);
+    newPass.focus();
+  });
+  forgotCode.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep2Btn.click(); });
+
+  // Forgot Step 3: new password
+  var forgotStep3Btn = document.createElement('button');
+  forgotStep3Btn.className = 'auth-btn';
+  forgotStep3Btn.textContent = 'إعادة تعيين كلمة المرور';
+  forgotStep3Btn.style.marginTop = '10px';
+  forgotStep3.appendChild(forgotStep3Btn);
+
+  forgotStep3Btn.addEventListener('click', () => {
+    hideErr(newpassError);
+    const p1 = newPass.value;
+    const p2 = newPass2.value;
+    if (!p1) { showErr(newpassError, 'كلمة المرور الجديدة مطلوبة'); return; }
+    if (p1.length < 6) { showErr(newpassError, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (p1 !== p2) { showErr(newpassError, 'كلمتا المرور غير متطابقتين'); return; }
+
+    var users = getUsers();
+    if (!users[resetEmail]) { showErr(newpassError, 'الحساب غير موجود'); return; }
+    users[resetEmail].password = p1;
+    saveUsers(users);
+
+    var resets = {};
+    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
+    delete resets[resetEmail];
+    localStorage.setItem('mp_resets', JSON.stringify(resets));
+
+    closeAuth();
+    playPurchaseSound();
+    notify('تم بنجاح!', 'تم تغيير كلمة المرور، يمكنك تسجيل الدخول الآن');
+  });
+  newPass.addEventListener('keydown', e => { if (e.key === 'Enter') newPass2.focus(); });
+  newPass2.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep3Btn.click(); });
+
+  // Main submit: login or register
   authSubmitBtn.addEventListener('click', () => {
-    if (!isLogin) {
-      if (!authName.value || !authEmail.value || !authPass.value || !authPass2.value) {
-        if (!authName.value) authName.focus();
-        else if (!authEmail.value) authEmail.focus();
-        else if (!authPass.value) authPass.focus();
-        else authPass2.focus();
-        return;
-      }
-      if (authPass.value !== authPass2.value) {
-        authPass2.style.borderColor = '#ef4444';
-        setTimeout(() => { authPass2.style.borderColor = ''; }, 2000);
-        return;
+    hideErr(authError);
+    if (isLogin) {
+      const email = authEmail.value.trim();
+      const pass = authPass.value;
+      if (!email) { showErr(authError, 'البريد الإلكتروني مطلوب'); return; }
+      if (!pass) { showErr(authError, 'كلمة المرور مطلوبة'); return; }
+      const users = getUsers();
+      const user = users[email];
+      if (!user) { showErr(authError, 'لا يوجد حساب بهذا البريد الإلكتروني، أنشئ حساباً جديداً'); return; }
+      if (user.password !== pass) { showErr(authError, 'كلمة المرور غير صحيحة'); return; }
+      currentUser = { email: email, username: user.username, joined: user.joined };
+      saveSession(currentUser);
+      closeAuth();
+      updateNavForUser();
+      playPurchaseSound();
+      notify('مرحباً ' + user.username + '!', 'تم تسجيل الدخول بنجاح');
+    } else {
+      const name = authName.value.trim();
+      const email = authEmail.value.trim();
+      const pass = authPass.value;
+      const pass2 = authPass2.value;
+      if (!name) { showErr(authError, 'اسم المستخدم مطلوب'); authName.focus(); return; }
+      if (name.length < 3) { showErr(authError, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل'); return; }
+      if (!email) { showErr(authError, 'البريد الإلكتروني مطلوب'); authEmail.focus(); return; }
+      if (!email.includes('@') || !email.includes('.')) { showErr(authError, 'البريد الإلكتروني غير صالح'); return; }
+      if (!pass) { showErr(authError, 'كلمة المرور مطلوبة'); authPass.focus(); return; }
+      if (pass.length < 6) { showErr(authError, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+      if (pass !== pass2) { showErr(authError, 'كلمتا المرور غير متطابقتين'); return; }
+      const users = getUsers();
+      if (users[email]) { showErr(authError, 'هذا البريد الإلكتروني مسجل بالفعل، سجّل الدخول'); return; }
+      users[email] = { username: name, password: pass, joined: new Date().toISOString() };
+      saveUsers(users);
+      currentUser = { email: email, username: name, joined: users[email].joined };
+      saveSession(currentUser);
+      closeAuth();
+      updateNavForUser();
+      playPurchaseSound();
+      notify('مرحباً ' + name + '!', 'تم إنشاء حسابك بنجاح');
+    }
+  });
+
+  [authEmail, authPass, authPass2, authName].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') authSubmitBtn.click(); });
+  });
+
+  document.getElementById('google-btn').addEventListener('click', () => {
+    notify('قريباً', 'تسجيل الدخول بحساب Google سيكون متاحاً قريباً');
+  });
+
+  function updateNavForUser() {
+    const userEl = document.getElementById('auth-user');
+    const startBtn = document.querySelector('.hero-buttons .btn') || document.querySelector('.btn-primary');
+    if (currentUser) {
+      if (userEl) {
+        userEl.innerHTML = '<i class="fas fa-user"></i> ' + currentUser.username;
+        userEl.style.whiteSpace = 'nowrap';
+        userEl.onclick = () => {
+          if (confirm('هل تريد تسجيل الخروج؟')) {
+            clearSession();
+            currentUser = null;
+            updateNavForUser();
+            notify('تم تسجيل الخروج', 'نتمنى رؤيتك قريباً');
+          }
+        };
       }
     } else {
-      if (!authEmail.value || !authPass.value) {
-        if (!authEmail.value) authEmail.focus();
-        else authPass.focus();
-        return;
+      if (userEl) {
+        userEl.innerHTML = '<i class="fas fa-user"></i>';
+        userEl.onclick = () => openAuth('login');
       }
     }
-    closeAuth();
-  });
-  forgotLink.addEventListener('click', () => {
-    if (authEmail.value) { alert('تم إرسال رابط إعادة تعيين كلمة المرور إلى ' + authEmail.value); }
-    else { authEmail.focus(); }
-  });
-  document.getElementById('google-btn').addEventListener('click', () => { closeAuth(); });
+  }
+
+  function checkSession() {
+    const session = getSession();
+    if (session) {
+      const users = getUsers();
+      if (users[session.email] && users[session.email].password === session.password) {
+        currentUser = session;
+      } else {
+        clearSession();
+      }
+    }
+    updateNavForUser();
+  }
+  checkSession();
 
   // Link buttons to auth modal
   document.querySelectorAll('a[href="#products"]').forEach(el => {
