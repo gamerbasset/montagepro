@@ -969,29 +969,37 @@
 <div id="music-toggle" title="تشغيل/إيقاف الموسيقى" class="playing"><i class="fas fa-music"></i></div>
 
 <div class="auth-overlay" id="auth-overlay">
-  <div class="auth-box">
-    <button class="auth-close" id="auth-close"><i class="fas fa-xmark"></i></button>
-    <h2 id="auth-title">تسجيل الدخول</h2>
-    <p class="auth-subtitle" id="auth-subtitle">أدخل بياناتك للمتابعة</p>
-    <div class="input-group">
-      <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
-      <i class="fas fa-envelope"></i>
+    <div class="auth-box">
+      <button class="auth-close" id="auth-close"><i class="fas fa-xmark"></i></button>
+      <h2 id="auth-title">تسجيل الدخول</h2>
+      <p class="auth-subtitle" id="auth-subtitle">أدخل بياناتك للمتابعة</p>
+      <div class="input-group" id="auth-name-group" style="display:none">
+        <input type="text" id="auth-name" placeholder="اسم المستخدم" autocomplete="name">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="input-group">
+        <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
+        <i class="fas fa-envelope"></i>
+      </div>
+      <div class="input-group">
+        <input type="password" id="auth-pass" placeholder="كلمة المرور" autocomplete="current-password">
+        <i class="fas fa-lock"></i>
+      </div>
+      <div class="input-group" id="auth-pass2-group" style="display:none">
+        <input type="password" id="auth-pass2" placeholder="تأكيد كلمة المرور" autocomplete="new-password">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <a class="forgot-link" id="forgot-link">نسيت كلمة المرور؟</a>
+      <button class="auth-btn" id="auth-submit-btn">تسجيل الدخول</button>
+      <div class="divider"><span></span><small>أو</small><span></span></div>
+      <button class="google-btn" id="google-btn">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        تسجيل الدخول بحساب Google
+      </button>
+      <div class="switch-mode" id="switch-mode">
+        ليس لديك حساب؟ <span>سجل الآن</span>
+      </div>
     </div>
-    <div class="input-group">
-      <input type="password" id="auth-pass" placeholder="كلمة المرور" autocomplete="current-password">
-      <i class="fas fa-lock"></i>
-    </div>
-    <a class="forgot-link" id="forgot-link">نسيت كلمة المرور؟</a>
-    <button class="auth-btn" id="auth-submit-btn">تسجيل الدخول</button>
-    <div class="divider"><span></span><small>أو</small><span></span></div>
-    <button class="google-btn" id="google-btn">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      تسجيل الدخول بحساب Google
-    </button>
-    <div class="switch-mode" id="switch-mode">
-      ليس لديك حساب؟ <span>سجل الآن</span>
-    </div>
-  </div>
 </div>
 <audio id="bg-music" autoplay loop style="display:none" preload="auto">
   <source src="BBB.mp3?v=2" type="audio/mpeg">
@@ -1768,6 +1776,10 @@
   const authSubtitle = document.getElementById('auth-subtitle');
   const authEmail = document.getElementById('auth-email');
   const authPass = document.getElementById('auth-pass');
+  const authPass2 = document.getElementById('auth-pass2');
+  const authName = document.getElementById('auth-name');
+  const authNameGroup = document.getElementById('auth-name-group');
+  const authPass2Group = document.getElementById('auth-pass2-group');
   const authSubmitBtn = document.getElementById('auth-submit-btn');
   const switchMode = document.getElementById('switch-mode');
   const forgotLink = document.getElementById('forgot-link');
@@ -1777,6 +1789,8 @@
     authOverlay.classList.add('open');
     authEmail.value = '';
     authPass.value = '';
+    if (authPass2) authPass2.value = '';
+    if (authName) authName.value = '';
     authEmail.focus();
   }
   function closeAuth() { authOverlay.classList.remove('open'); }
@@ -1787,19 +1801,51 @@
       authSubmitBtn.textContent = 'تسجيل الدخول';
       switchMode.innerHTML = 'ليس لديك حساب؟ <span>سجل الآن</span>';
       forgotLink.style.display = '';
+      authNameGroup.style.display = 'none';
+      authPass2Group.style.display = 'none';
+      authEmail.placeholder = 'البريد الإلكتروني';
     } else {
       authTitle.textContent = 'إنشاء حساب';
-      authSubtitle.textContent = 'أنشئ حسابك للبدء';
+      authSubtitle.textContent = 'أنشئ حسابك الجديد';
       authSubmitBtn.textContent = 'إنشاء حساب';
       switchMode.innerHTML = 'لديك حساب بالفعل؟ <span>سجل الدخول</span>';
       forgotLink.style.display = 'none';
+      authNameGroup.style.display = '';
+      authPass2Group.style.display = '';
+      authEmail.placeholder = 'اسم المستخدم';
+      authEmail.type = 'text';
+      authPass.placeholder = 'كلمة المرور';
     }
   }
-  switchMode.addEventListener('click', () => { isLogin = !isLogin; updateAuthUI(); });
+  switchMode.addEventListener('click', () => {
+    isLogin = !isLogin;
+    authEmail.type = 'email';
+    authEmail.placeholder = 'البريد الإلكتروني';
+    updateAuthUI();
+  });
   authClose.addEventListener('click', closeAuth);
   authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuth(); });
   authSubmitBtn.addEventListener('click', () => {
-    if (!authEmail.value || !authPass.value) { authEmail.focus(); return; }
+    if (!isLogin) {
+      if (!authName.value || !authEmail.value || !authPass.value || !authPass2.value) {
+        if (!authName.value) authName.focus();
+        else if (!authEmail.value) authEmail.focus();
+        else if (!authPass.value) authPass.focus();
+        else authPass2.focus();
+        return;
+      }
+      if (authPass.value !== authPass2.value) {
+        authPass2.style.borderColor = '#ef4444';
+        setTimeout(() => { authPass2.style.borderColor = ''; }, 2000);
+        return;
+      }
+    } else {
+      if (!authEmail.value || !authPass.value) {
+        if (!authEmail.value) authEmail.focus();
+        else authPass.focus();
+        return;
+      }
+    }
     closeAuth();
   });
   forgotLink.addEventListener('click', () => {
