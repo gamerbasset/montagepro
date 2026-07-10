@@ -1023,6 +1023,15 @@
         </div>
         <div class="auth-error" id="newpass-error"></div>
       </div>
+      <!-- Register Email Verification -->
+      <div id="register-verify" style="display:none">
+        <p style="color:#059669;font-size:12px;text-align:center;margin-bottom:14px" id="register-verify-msg"></p>
+        <div class="input-group">
+          <input type="text" id="register-verify-code" placeholder="أدخل رمز التحقق" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px" autocomplete="one-time-code">
+          <i class="fas fa-key"></i>
+        </div>
+        <div class="auth-error" id="register-verify-error"></div>
+      </div>
       <button class="auth-btn" id="auth-submit-btn">تسجيل الدخول</button>
       <div class="divider" id="auth-divider"><span></span><small>أو</small><span></span></div>
       <button class="google-btn" id="google-btn">
@@ -1832,12 +1841,19 @@
   const codeError = document.getElementById('code-error');
   const newpassError = document.getElementById('newpass-error');
   const forgotCodeMsg = document.getElementById('forgot-code-msg');
+  const registerVerify = document.getElementById('register-verify');
+  const registerVerifyCode = document.getElementById('register-verify-code');
+  const registerVerifyError = document.getElementById('register-verify-error');
+  const registerVerifyMsg = document.getElementById('register-verify-msg');
 
   let isLogin = true;
   let authMode = 'login';
   let currentUser = null;
   let resetEmail = '';
   let resetCode = '';
+  let regPendingData = null;
+  let regCode = '';
+  let regCodeExpires = 0;
 
   function getUsers() {
     try { return JSON.parse(localStorage.getItem('mp_users')) || {}; }
@@ -1873,6 +1889,7 @@
     forgotStep1.style.display = 'none';
     forgotStep2.style.display = 'none';
     forgotStep3.style.display = 'none';
+    if (registerVerify) registerVerify.style.display = 'none';
     authEmail.value = '';
     authPass.value = '';
     authPass2.value = '';
@@ -1881,7 +1898,10 @@
     if (forgotCode) forgotCode.value = '';
     if (newPass) newPass.value = '';
     if (newPass2) newPass2.value = '';
+    if (registerVerifyCode) registerVerifyCode.value = '';
     hideErr(authError); hideErr(forgotError); hideErr(codeError); hideErr(newpassError);
+    if (registerVerifyError) hideErr(registerVerifyError);
+    regPendingData = null;
     updateAuthUI();
   }
 
@@ -2034,6 +2054,37 @@
   newPass.addEventListener('keydown', e => { if (e.key === 'Enter') newPass2.focus(); });
   newPass2.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep3Btn.click(); });
 
+  // Register email verification
+  if (registerVerify) {
+    var regVerifyBtn = document.createElement('button');
+    regVerifyBtn.className = 'auth-btn';
+    regVerifyBtn.textContent = 'تفعيل الحساب';
+    regVerifyBtn.style.marginTop = '10px';
+    registerVerify.appendChild(regVerifyBtn);
+
+    regVerifyBtn.addEventListener('click', () => {
+      hideErr(registerVerifyError);
+      const code = registerVerifyCode.value.trim();
+      if (!code) { showErr(registerVerifyError, 'أدخل رمز التحقق'); return; }
+      if (code.length !== 6) { showErr(registerVerifyError, 'الرمز يجب أن يكون 6 أرقام'); return; }
+      if (Date.now() > regCodeExpires) { showErr(registerVerifyError, 'انتهت صلاحية الرمز (10 دقائق)'); return; }
+      if (code !== regCode) { showErr(registerVerifyError, 'الرمز غير صحيح'); return; }
+
+      var users = getUsers();
+      users[regPendingData.email] = { username: regPendingData.username, password: regPendingData.password, joined: regPendingData.joined };
+      saveUsers(users);
+      currentUser = { email: regPendingData.email, username: regPendingData.username, joined: regPendingData.joined };
+      saveSession(currentUser);
+      regPendingData = null;
+      regCode = '';
+      closeAuth();
+      updateNavForUser();
+      playPurchaseSound();
+      notify('مرحباً ' + currentUser.username + '!', 'تم تفعيل حسابك بنجاح');
+    });
+    registerVerifyCode.addEventListener('keydown', e => { if (e.key === 'Enter') regVerifyBtn.click(); });
+  }
+
   // Main submit: login or register
   authSubmitBtn.addEventListener('click', () => {
     hideErr(authError);
@@ -2066,14 +2117,22 @@
       if (pass !== pass2) { showErr(authError, 'كلمتا المرور غير متطابقتين'); return; }
       const users = getUsers();
       if (users[email]) { showErr(authError, 'هذا البريد الإلكتروني مسجل بالفعل، سجّل الدخول'); return; }
-      users[email] = { username: name, password: pass, joined: new Date().toISOString() };
-      saveUsers(users);
-      currentUser = { email: email, username: name, joined: users[email].joined };
-      saveSession(currentUser);
-      closeAuth();
-      updateNavForUser();
-      playPurchaseSound();
-      notify('مرحباً ' + name + '!', 'تم إنشاء حسابك بنجاح');
+      regPendingData = { username: name, email: email, password: pass, joined: new Date().toISOString() };
+      regCode = generateCode();
+      regCodeExpires = Date.now() + 10 * 60 * 1000;
+      authFormFields.style.display = 'none';
+      authSubmitBtn.style.display = 'none';
+      authDivider.style.display = 'none';
+      switchMode.style.display = 'none';
+      if (registerVerify) {
+        registerVerify.style.display = '';
+        registerVerifyMsg.textContent = 'تم إرسال رمز التحقق إلى: ' + email;
+        registerVerifyCode.value = '';
+        hideErr(registerVerifyError);
+      }
+      console.log('=== REGISTER CODE ===', regCode, '===');
+      notify('تم إرسال الرمز', 'رمز التحقق: ' + regCode);
+      registerVerifyCode.focus();
     }
   });
 
