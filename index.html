@@ -628,6 +628,79 @@
       .section-title h2 { font-size: 26px; }
       .features-grid { grid-template-columns: 1fr; }
     }
+    .auth-overlay {
+      position: fixed; inset: 0; z-index: 999999;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .auth-overlay.open { opacity: 1; pointer-events: all; }
+    .auth-box {
+      background: #0d0d1a; border: 1px solid #1a1a30; border-radius: 24px;
+      padding: 36px 32px; max-width: 420px; width: 90%;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      transform: scale(0.9) translateY(20px); transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+      position: relative;
+    }
+    .auth-overlay.open .auth-box { transform: scale(1) translateY(0); }
+    .auth-box .auth-close {
+      position: absolute; top: 16px; left: 16px; background: none; border: none;
+      color: #666; font-size: 18px; cursor: pointer; width: 32px; height: 32px;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .auth-box .auth-close:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .auth-box h2 { color: #fff; font-size: 22px; font-weight: 900; text-align: center; margin-bottom: 6px; }
+    .auth-box .auth-subtitle { color: #666; font-size: 13px; text-align: center; margin-bottom: 24px; }
+    .auth-box .input-group {
+      margin-bottom: 14px; position: relative;
+    }
+    .auth-box .input-group i {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: #555; font-size: 14px; transition: color 0.3s;
+    }
+    .auth-box .input-group input {
+      width: 100%; padding: 13px 42px 13px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      color: #fff; font-size: 14px; font-family: 'Cairo', sans-serif;
+      transition: all 0.3s; outline: none;
+    }
+    .auth-box .input-group input:focus {
+      border-color: #059669; background: rgba(5,150,105,0.04);
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+    }
+    .auth-box .input-group input:focus + i,
+    .auth-box .input-group input:focus ~ i { color: #059669; }
+    .auth-box .forgot-link {
+      display: block; text-align: left; color: #059669; font-size: 12px;
+      margin-bottom: 20px; cursor: pointer; transition: color 0.2s;
+    }
+    .auth-box .forgot-link:hover { color: #10b981; }
+    .auth-box .auth-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: 'Cairo', sans-serif; transition: all 0.3s; margin-bottom: 16px;
+    }
+    .auth-box .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(5,150,105,0.4); }
+    .auth-box .divider {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .auth-box .divider span { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    .auth-box .divider small { color: #555; font-size: 12px; white-space: nowrap; }
+    .auth-box .google-btn {
+      width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; background: rgba(255,255,255,0.03);
+      color: #ccc; font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: 'Cairo', sans-serif; transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .auth-box .google-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+    .auth-box .google-btn img { width: 20px; height: 20px; }
+    .auth-box .switch-mode {
+      text-align: center; margin-top: 18px; color: #666; font-size: 13px;
+    }
+    .auth-box .switch-mode span { color: #059669; cursor: pointer; font-weight: 700; transition: color 0.2s; }
+    .auth-box .switch-mode span:hover { color: #10b981; }
   </style>
 </head>
 <body>
@@ -892,6 +965,32 @@
 </footer>
 
 <div id="music-toggle" title="تشغيل/إيقاف الموسيقى" class="playing"><i class="fas fa-music"></i></div>
+
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-box">
+    <button class="auth-close" id="auth-close"><i class="fas fa-xmark"></i></button>
+    <h2 id="auth-title">تسجيل الدخول</h2>
+    <p class="auth-subtitle" id="auth-subtitle">أدخل بياناتك للمتابعة</p>
+    <div class="input-group">
+      <input type="email" id="auth-email" placeholder="البريد الإلكتروني" autocomplete="email">
+      <i class="fas fa-envelope"></i>
+    </div>
+    <div class="input-group">
+      <input type="password" id="auth-pass" placeholder="كلمة المرور" autocomplete="current-password">
+      <i class="fas fa-lock"></i>
+    </div>
+    <a class="forgot-link" id="forgot-link">نسيت كلمة المرور؟</a>
+    <button class="auth-btn" id="auth-submit-btn">تسجيل الدخول</button>
+    <div class="divider"><span></span><small>أو</small><span></span></div>
+    <button class="google-btn" id="google-btn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      تسجيل الدخول بحساب Google
+    </button>
+    <div class="switch-mode" id="switch-mode">
+      ليس لديك حساب؟ <span>سجل الآن</span>
+    </div>
+  </div>
+</div>
 <audio id="bg-music" autoplay loop style="display:none" preload="auto">
   <source src="BBB.mp3?v=2" type="audio/mpeg">
 </audio>
@@ -1658,6 +1757,67 @@
   // Hover sounds on cards and interactive elements
   document.querySelectorAll('.product-card, .testimonial-card, .feature-item, .btn').forEach(el => {
     el.addEventListener('mouseenter', playHoverSound);
+  });
+
+  // ===== AUTH MODAL =====
+  const authOverlay = document.getElementById('auth-overlay');
+  const authClose = document.getElementById('auth-close');
+  const authTitle = document.getElementById('auth-title');
+  const authSubtitle = document.getElementById('auth-subtitle');
+  const authEmail = document.getElementById('auth-email');
+  const authPass = document.getElementById('auth-pass');
+  const authSubmitBtn = document.getElementById('auth-submit-btn');
+  const switchMode = document.getElementById('switch-mode');
+  const forgotLink = document.getElementById('forgot-link');
+  let isLogin = true;
+
+  function openAuth() {
+    authOverlay.classList.add('open');
+    authEmail.value = '';
+    authPass.value = '';
+    authEmail.focus();
+  }
+  function closeAuth() { authOverlay.classList.remove('open'); }
+  function updateAuthUI() {
+    if (isLogin) {
+      authTitle.textContent = 'تسجيل الدخول';
+      authSubtitle.textContent = 'أدخل بياناتك للمتابعة';
+      authSubmitBtn.textContent = 'تسجيل الدخول';
+      switchMode.innerHTML = 'ليس لديك حساب؟ <span>سجل الآن</span>';
+      forgotLink.style.display = '';
+    } else {
+      authTitle.textContent = 'إنشاء حساب';
+      authSubtitle.textContent = 'أنشئ حسابك للبدء';
+      authSubmitBtn.textContent = 'إنشاء حساب';
+      switchMode.innerHTML = 'لديك حساب بالفعل؟ <span>سجل الدخول</span>';
+      forgotLink.style.display = 'none';
+    }
+  }
+  switchMode.addEventListener('click', () => { isLogin = !isLogin; updateAuthUI(); });
+  authClose.addEventListener('click', closeAuth);
+  authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuth(); });
+  authSubmitBtn.addEventListener('click', () => {
+    if (!authEmail.value || !authPass.value) { authEmail.focus(); return; }
+    closeAuth();
+  });
+  forgotLink.addEventListener('click', () => {
+    if (authEmail.value) { alert('تم إرسال رابط إعادة تعيين كلمة المرور إلى ' + authEmail.value); }
+    else { authEmail.focus(); }
+  });
+  document.getElementById('google-btn').addEventListener('click', () => { closeAuth(); });
+
+  // Link buttons to auth modal
+  document.querySelectorAll('a[href="#products"]').forEach(el => {
+    if (el.classList.contains('btn')) el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+  });
+  document.querySelectorAll('.hero-buttons .btn').forEach(el => {
+    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+  });
+  document.querySelectorAll('.cta .btn').forEach(el => {
+    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+  });
+  document.querySelectorAll('.cart-checkout-btn').forEach(el => {
+    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
   });
 </script>
 </body>
