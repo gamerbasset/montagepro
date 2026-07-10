@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MONTAGE PRO - ملحقات المونتاج</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', sans-serif; color: #e0e0e0;
+      background: #07070d;
+      background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 300px 300px;
+      overflow-x: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    .reveal {
+      opacity: 0; transform: translateY(60px);
+      transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-scale { opacity: 0; transform: scale(0.85); transition: opacity 0.8s ease, transform 0.8s ease; }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+    #particles-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    #glow-blur {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+      background: radial-gradient(800px at var(--mx,50%) var(--my,50%), rgba(5,150,105,0.06), transparent 70%);
+      backdrop-filter: blur(0px);
+    }
+    #dust-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; mix-blend-mode: screen;
+    }
+
+    header {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      background: rgba(7,7,13,0.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      transition: background 0.4s;
+    }
+    header.scrolled { background: rgba(7,7,13,0.97); }
+    header .container {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .lang-btn {
+      background: none; border: 1px solid rgba(255,255,255,0.08); color: #888;
+      width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s; font-size: 15px; position: relative;
+    }
+    .lang-btn:hover { border-color: rgba(5,150,105,0.3); color: #059669; background: rgba(5,150,105,0.05); }
+    .lang-panel {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .lang-panel.open { opacity: 1; pointer-events: all; }
+    .lang-panel-inner {
+      background: #0d0d1a; border: 1px solid #1a1a30; border-radius: 24px;
+      padding: 32px; max-width: 620px; width: 90%; max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+      transform: scale(0.95); transition: transform 0.3s;
+    }
+    .lang-panel.open .lang-panel-inner { transform: scale(1); }
+    .lang-panel-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    }
+    .lang-panel-header h3 { font-size: 18px; color: #fff; }
+    .lang-panel-close {
+      background: none; border: none; color: #666; font-size: 20px; cursor: pointer;
+      width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .lang-panel-close:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .lang-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(126px, 1fr)); gap: 6px; }
+    .lang-option {
+      background: none; border: 1px solid transparent; color: #999; cursor: pointer;
+      padding: 10px 6px; border-radius: 10px; text-align: center;
+      transition: all 0.25s; font-family: 'Cairo', sans-serif; font-size: 13px;
+    }
+    .lang-option:hover { border-color: rgba(5,150,105,0.15); background: rgba(5,150,105,0.03); color: #ccc; }
+    .lang-option.active { border-color: #059669; background: rgba(5,150,105,0.08); color: #10b981; }
+    .lang-option .native { display: block; font-size: 13px; font-weight: 600; }
+    .lang-option .en-name { display: block; font-size: 10px; color: #555; font-weight: 400; }
+    .logo {
+      font-size: 22px; font-weight: 900;
+      background: linear-gradient(135deg, #059669, #10b981);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+    nav a {
+      margin-right: 28px; font-weight: 600; font-size: 14px; color: #888;
+      transition: color 0.3s; position: relative;
+    }
+    nav a:last-child { margin-right: 0; }
+    nav a:hover { color: #059669; }
+    nav a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+      background: #059669; transition: width 0.3s;
+    }
+    nav a:hover::after { width: 100%; }
+    .btn {
+      display: inline-block; padding: 10px 28px; border-radius: 50px;
+      font-weight: 700; font-size: 14px; transition: all 0.4s; cursor: pointer; border: none; position: relative;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #059669, #10b981); color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(5,150,105,0.4); }
+    .btn-outline { background: transparent; color: #059669; border: 2px solid #059669; }
+    .btn-outline:hover { background: #059669; color: #fff; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(5,150,105,0.3); }
+    .btn-lg { padding: 14px 44px; font-size: 16px; }
+    .btn-white { background: #fff; color: #0d0d1a; }
+    .btn-white:hover { background: #e0e0ff; transform: translateY(-3px); box-shadow: 0 12px 32px rgba(255,255,255,0.2); }
+    .btn-glow::before {
+      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(45deg, #059669, #10b981, #059669, #10b981);
+      background-size: 400%; border-radius: 52px; z-index: -1;
+      animation: glow-rotate 4s linear infinite;
+    }
+    @keyframes glow-rotate {
+      0% { background-position: 0 0; }
+      100% { background-position: 400% 0; }
+    }
+
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; position: relative; z-index: 1;
+      background: radial-gradient(ellipse at 50% 0%, #14142b 0%, #07070d 70%);
+      overflow: hidden;
+    }
+    .hero .container { display: flex; align-items: center; gap: 60px; padding-top: 80px; position: relative; z-index: 1; }
+    .hero-text { flex: 1; }
+    .hero-text .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 18px; border-radius: 50px;
+      background: rgba(5,150,105,0.12); color: #059669; font-weight: 700; font-size: 13px;
+      margin-bottom: 20px; border: 1px solid rgba(5,150,105,0.2);
+    }
+    .hero-text .badge .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #059669;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+    .hero-text h1 {
+      font-size: 54px; font-weight: 900; line-height: 1.15; margin-bottom: 16px; color: #fff;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    }
+    .hero-text h1 .gradient {
+      background: linear-gradient(135deg, #059669, #10b981, #14b8a6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-text p { font-size: 17px; line-height: 1.8; color: #777; margin-bottom: 28px; max-width: 500px; }
+    .hero-buttons { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 32px; margin-top: 36px; }
+    .hero-stats div span:first-child {
+      font-size: 22px; font-weight: 900; color: #fff;
+    }
+    .hero-stats div span:last-child {
+      display: block; font-size: 13px; color: #666;
+    }
+    .hero-image { flex: 1; display: flex; justify-content: center; perspective: 1000px; }
+    .hero-image .mockup {
+      width: 100%; max-width: 520px; aspect-ratio: 4/3;
+      background: linear-gradient(160deg, #1a1a3e, #0d0d1a);
+      border-radius: 24px; display: flex; align-items: center; justify-content: center;
+      position: relative;
+      border: 1px solid rgba(5,150,105,0.12);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3);
+      transform-style: preserve-3d; overflow: hidden;
+    }
+    .mockup-timeline {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: flex; align-items: center; gap: 4px; padding: 0 12px;
+    }
+    .mockup-timeline .track {
+      flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
+      position: relative; overflow: hidden;
+    }
+    .mockup-timeline .track .fill {
+      height: 100%; width: 40%; border-radius: 3px;
+      background: linear-gradient(90deg, #059669, #10b981);
+      animation: timeline-scrub 3s ease-in-out infinite;
+    }
+    @keyframes timeline-scrub {
+      0%, 100% { width: 30%; margin-left: 0; }
+      50% { width: 60%; margin-left: 30%; }
+    }
+    .mockup-timeline .timecode {
+      color: #888; font-size: 11px; font-family: monospace; margin-left: 8px; direction: ltr;
+    }
+    .mockup-layers {
+      position: absolute; top: 10px; left: 12px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .mockup-layers .layer {
+      height: 10px; border-radius: 3px; opacity: 0.5;
+    }
+    .mockup-layers .layer:nth-child(1) { width: 60px; background: #059669; }
+    .mockup-layers .layer:nth-child(2) { width: 80px; background: #10b981; }
+    .mockup-layers .layer:nth-child(3) { width: 50px; background: #14b8a6; }
+    .mockup-center-icon {
+      font-size: 56px; color: rgba(5,150,105,0.15); position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -60%);
+    }
+    .mockup-vignette {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.3));
+    }
+    .hero-image .mockup .floating-icon {
+      position: absolute; font-size: 18px; animation: float 3s ease-in-out infinite;
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.1);
+      color: #059669;
+    }
+    .hero-image .mockup .fi1 { top: 12%; right: 8%; animation-delay: 0s; }
+    .hero-image .mockup .fi2 { bottom: 30%; left: 6%; animation-delay: 1s; }
+    .hero-image .mockup .fi3 { top: 30%; left: 50%; animation-delay: 2s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .scroll-indicator {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: #555; font-size: 12px; z-index: 2; animation: bounce-down 1.8s ease-in-out infinite;
+    }
+    .scroll-indicator .mouse {
+      width: 22px; height: 34px; border: 2px solid #555; border-radius: 12px;
+      display: flex; justify-content: center; padding-top: 6px;
+    }
+    .scroll-indicator .mouse .wheel {
+      width: 3px; height: 8px; background: #059669; border-radius: 2px;
+      animation: scroll-wheel 1.5s ease-in-out infinite;
+    }
+    @keyframes scroll-wheel {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(10px); opacity: 0; }
+    }
+    @keyframes bounce-down {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(6px); }
+    }
+    .products {
+      padding: 120px 0; position: relative; z-index: 1;
+      box-shadow: inset 0 4px 30px rgba(0,0,0,0.3);
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 99.5%, rgba(255,255,255,0.01) 99.5%, rgba(255,255,255,0.01) 100%),
+        radial-gradient(ellipse at 50% 0%, rgba(5,150,105,0.02) 0%, transparent 60%);
+      background-size: 120px 100%, 100% 100%;
+    }
+    .section-title { text-align: center; margin-bottom: 60px; }
+    .section-title h2 { font-size: 38px; font-weight: 900; margin-bottom: 12px; color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
+    .section-title p { color: #666; font-size: 16px; max-width: 500px; margin: 0 auto; }
+    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; max-width: 1100px; margin: 0 auto; }
+
+    @media (max-width: 900px) { .products-grid { grid-template-columns: repeat(2, 1fr); max-width: 700px; } }
+    .product-card {
+      background: #0d0d1a; border-radius: 20px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06); transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: pointer; position: relative;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .product-card:hover { transform: translateY(-12px); border-color: #059669; box-shadow: 0 24px 48px rgba(5,150,105,0.15), 0 8px 24px rgba(0,0,0,0.4); }
+    .product-card .preview {
+      height: 280px; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .preview-pattern {
+      position: absolute; inset: 0; opacity: 0;
+    }
+    .preview-grid {
+      position: absolute; inset: 0;
+      opacity: 0;
+    }
+    .product-card .preview::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(13,13,26,0.6));
+    }
+    .product-card .preview .product-icon {
+      font-size: 48px; z-index: 1; position: relative;
+      color: rgba(255,255,255,0.15); filter: saturate(0.5);
+    }
+    .product-card .preview .play-btn {
+      position: absolute; z-index: 2; width: 44px; height: 44px;
+      border-radius: 50%; background: rgba(5,150,105,0.85);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; transition: all 0.3s;
+      opacity: 0; transform: scale(0.8); font-size: 14px;
+    }
+    .product-card:hover .play-btn { opacity: 1; transform: scale(1); }
+    .product-card .info { padding: 20px 24px 24px; }
+    .product-card .info .tag {
+      display: inline-block; padding: 3px 12px; border-radius: 50px;
+      font-size: 11px; font-weight: 700; margin-bottom: 10px;
+    }
+    .tag-popular { background: rgba(5,150,105,0.15); color: #059669; }
+    .tag-new { background: rgba(6,182,212,0.15); color: #14b8a6; }
+    .tag-sale { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .product-card .info h3 { font-size: 18px; color: #fff; margin-bottom: 6px; }
+    .product-card .info p { color: #666; font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+    .product-card .info .bottom {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .product-card .info .bottom .price {
+      font-size: 20px; font-weight: 900; color: #059669;
+    }
+    .product-card .info .bottom .price .old {
+      font-size: 14px; color: #555; text-decoration: line-through; margin-right: 8px;
+      font-weight: 600;
+    }
+    .product-card .info .bottom .cart-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(5,150,105,0.1); border: 1px solid rgba(5,150,105,0.2);
+      color: #059669; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.3s; font-size: 14px;
+    }
+    .product-card .info .bottom .cart-btn:hover { background: #059669; color: #fff; }
+    #music-toggle {
+      position: fixed; bottom: 24px; right: 24px; z-index: 99999;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(5,150,105,0.2); backdrop-filter: blur(8px);
+      border: 1px solid rgba(5,150,105,0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: #059669; font-size: 18px; cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    #music-toggle:hover { background: rgba(5,150,105,0.35); transform: scale(1.1); }
+    #music-toggle.playing { color: #10b981; animation: pulse-music 2s infinite; }
+    @keyframes pulse-music { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { box-shadow: 0 0 0 10px rgba(16,185,129,0); } }
+
+    .features {
+      padding: 120px 0; position: relative; z-index: 1;
+      background: radial-gradient(ellipse at 50% 50%, #0d0d1a 0%, transparent 70%);
+      box-shadow: inset 0 4px 30px rgba(0,0,0,0.2);
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 99.5%, rgba(255,255,255,0.01) 99.5%, rgba(255,255,255,0.01) 100%);
+      background-size: 120px 100%;
+    }
+    .testimonials {
+      padding: 120px 0; position: relative; z-index: 1;
+      background:
+        radial-gradient(ellipse at 50% 50%, rgba(5,150,105,0.015) 0%, transparent 60%),
+        repeating-linear-gradient(90deg, transparent, transparent 99.5%, rgba(255,255,255,0.01) 99.5%, rgba(255,255,255,0.01) 100%);
+      background-size: 100% 100%, 120px 100%;
+      box-shadow: inset 0 4px 30px rgba(0,0,0,0.15);
+    }
+    .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .feature-item {
+      text-align: center; padding: 32px 20px; border-radius: 16px;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+      transition: all 0.4s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .feature-item:hover { background: rgba(5,150,105,0.05); border-color: rgba(5,150,105,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .feature-item .icon-wrap {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.1);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px; font-size: 20px; color: #059669;
+    }
+    .feature-item h4 { color: #fff; font-size: 15px; margin-bottom: 6px; }
+    .feature-item p { color: #666; font-size: 13px; }
+
+    .showreel {
+      padding: 100px 0; text-align: center; position: relative; z-index: 1;
+      background: linear-gradient(180deg, transparent, #0a0a14, transparent);
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 99.5%, rgba(255,255,255,0.01) 99.5%, rgba(255,255,255,0.01) 100%);
+      background-size: 120px 100%;
+      box-shadow: inset 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .showreel .video-placeholder {
+      max-width: 800px; margin: 40px auto 0; border-radius: 20px; overflow: hidden;
+      position: relative; border: 1px solid rgba(5,150,105,0.1);
+      background: #0d0d1a; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
+      aspect-ratio: 16/9;
+    }
+    .showreel .video-placeholder .big-play {
+      position: absolute; z-index: 2; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #059669, #10b981);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: #fff; cursor: pointer;
+      transition: all 0.4s; box-shadow: 0 0 50px rgba(5,150,105,0.4);
+    }
+    .showreel video {
+      width: 100%; height: 100%; display: block;
+      object-fit: contain; background: #000; cursor: pointer;
+    }
+
+    .testimonials { padding: 120px 0; position: relative; z-index: 1; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .testimonial-card {
+      background: #0d0d1a; border-radius: 16px; padding: 28px;
+      border: 1px solid #1a1a30; transition: all 0.4s;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .testimonial-card:hover { border-color: rgba(5,150,105,0.2); transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
+    .testimonial-card .stars { color: #f59e0b; font-size: 13px; margin-bottom: 12px; letter-spacing: 2px; }
+    .testimonial-card blockquote { color: #999; font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
+    .testimonial-card .author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-card .author .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 16px;
+    }
+    .testimonial-card .author .name { font-weight: 700; color: #fff; font-size: 14px; }
+    .testimonial-card .author .title { font-size: 12px; color: #666; }
+
+    .cta {
+      padding: 120px 0; text-align: center; position: relative; z-index: 1;
+      background: radial-gradient(ellipse at 50% 100%, #14142b 0%, #07070d 70%);
+      box-shadow: inset 0 8px 40px rgba(0,0,0,0.3);
+    }
+    .cta h2 { font-size: 40px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+    .cta h2 .gradient {
+      background: linear-gradient(135deg, #059669, #10b981);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .cta p { color: #666; font-size: 16px; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .cta .guarantee {
+      display: flex; justify-content: center; gap: 32px; margin-top: 28px; flex-wrap: wrap;
+    }
+    .cta .guarantee span { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; }
+
+    footer {
+      padding: 40px 0; text-align: center; position: relative; z-index: 1;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    footer .social { display: flex; justify-content: center; gap: 16px; margin-bottom: 16px; }
+    footer .social a {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center;
+      color: #666; transition: all 0.3s; font-size: 16px;
+    }
+    footer .social a:hover { background: rgba(5,150,105,0.15); color: #059669; transform: translateY(-3px); }
+    footer .logo { margin-bottom: 8px; display: block; }
+    footer p { color: #444; font-size: 13px; }
+
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .hero .container { flex-direction: column; text-align: center; }
+      .hero-text p { margin: 0 auto 28px; }
+      .hero-buttons { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-text h1 { font-size: 34px; }
+      .hero-image .mockup { font-size: 40px; aspect-ratio: 4/3; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .testimonials-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .products-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      nav { display: none; }
+      .hero-text h1 { font-size: 28px; }
+      .cta .guarantee { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+<div id="glow-blur"></div>
+
+<header>
+  <div class="container">
+    <div class="logo">MONTAGE PRO</div>
+    <nav>
+      <a href="#products" data-i18n="nav_products">المنتجات</a>
+      <a href="#features" data-i18n="nav_features">المميزات</a>
+      <a href="#showreel" data-i18n="nav_showreel">عرض</a>
+      <a href="#testimonials" data-i18n="nav_testimonials">التقييمات</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="lang-btn" id="lang-btn" title="الإعدادات"><i class="fas fa-gear"></i></button>
+      <a href="#products" class="btn btn-primary" data-i18n="header_cta">تسوق الآن</a>
+    </div>
+  </div>
+</header>
+
+<div class="lang-panel" id="lang-panel">
+  <div class="lang-panel-inner">
+    <div class="lang-panel-header">
+      <h3 data-i18n="settings_title">الإعدادات</h3>
+      <button class="lang-panel-close" id="lang-panel-close"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="lang-list" id="lang-list"></div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-text">
+      <div class="badge reveal"><span class="dot"></span> <span data-i18n="hero_badge">أقوى ملحقات المونتاج لعام 2025</span></div>
+      <h1 class="reveal" style="transition-delay:0.1s" data-i18n="hero_title">ارفع مستوى <span class="gradient">فيديوهاتك</span> بإحترافية</h1>
+      <p class="reveal" style="transition-delay:0.2s" data-i18n="hero_desc">مجموعة متكاملة من المؤثرات البصرية، الانتقالات، التيتلات، والبريستات الجاهزة لبرامج المونتاج — صممت خصيصاً للمبدعين.</p>
+      <div class="hero-buttons reveal" style="transition-delay:0.3s">
+        <a href="#products" class="btn btn-primary btn-lg btn-glow" data-i18n="hero_btn_products">استعرض المنتجات</a>
+        <a href="#showreel" class="btn btn-outline btn-lg" data-i18n="hero_btn_showreel">شاهد العرض</a>
+      </div>
+      <div class="hero-stats reveal" style="transition-delay:0.4s">
+        <div><span data-i18n="stat1_val">+350</span><span data-i18n="stat1_label">منتج احترافي</span></div>
+        <div><span data-i18n="stat2_val">+12K</span><span data-i18n="stat2_label">زبون حول العالم</span></div>
+        <div><span data-i18n="stat3_val">4.9/5</span><span data-i18n="stat3_label">متوسط التقييمات</span></div>
+      </div>
+    </div>
+    <div class="hero-image reveal-scale" style="transition-delay:0.25s">
+      <div class="mockup">
+        <div class="mockup-vignette"></div>
+        <div class="mockup-layers">
+          <div class="layer"></div>
+          <div class="layer"></div>
+          <div class="layer"></div>
+        </div>
+        <i class="fas fa-film mockup-center-icon"></i>
+        <span class="floating-icon fi1"><i class="fas fa-wand-magic-sparkles"></i></span>
+        <span class="floating-icon fi2"><i class="fas fa-sliders"></i></span>
+        <span class="floating-icon fi3"><i class="fas fa-crop-simple"></i></span>
+        <div class="mockup-timeline">
+          <i class="fas fa-backward-step" style="color:#666;font-size:12px"></i>
+          <i class="fas fa-play" style="color:#059669;font-size:12px;margin:0 6px"></i>
+          <i class="fas fa-forward-step" style="color:#666;font-size:12px"></i>
+          <div class="track"><div class="fill"></div></div>
+          <span class="timecode">00:14:23</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <div class="mouse"><div class="wheel"></div></div>
+    <span data-i18n="scroll_down">اسحب للأسفل</span>
+  </div>
+</section>
+
+<section class="products" id="products">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2 data-i18n="products_title">اختر باقتك المثالية</h2>
+      <p data-i18n="products_subtitle">منتجات رقمية جاهزة للتحميل والاستخدام مباشرة في مشاريعك</p>
+    </div>
+    <div class="products-grid">
+      <div class="product-card reveal" style="transition-delay:0.05s">
+        <div class="preview" style="background:url('GOLD.png') center/contain no-repeat;background-color:#0a0a14">
+          <div class="preview-pattern"></div>
+          <div class="preview-grid"></div>
+          <div class="play-btn" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);opacity:1;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);width:auto;height:auto;border-radius:50px;padding:8px 16px;gap:6px;display:flex;align-items:center;color:#fff;font-size:12px">
+            <i class="fas fa-play"></i> <span data-i18n="preview_btn">معاينة</span>
+          </div>
+        </div>
+        <div class="info">
+          <span class="tag tag-popular" data-i18n="tag_gold">الأكثر مبيعاً</span>
+          <h3 data-i18n="gold_name">الباقة الذهبية</h3>
+          <p data-i18n="gold_desc">كل ملحقات المونتاج في حزمة واحدة متكاملة — ترانزيشن، تيترات، لوتس، مؤثرات صوتية، بريسات موشن جرافيك — تحديثات مدى الحياة ودعم فني أولوية</p>
+          <div class="bottom">
+            <span class="price"><span class="old" data-i18n="gold_old">$299</span><span data-i18n="gold_price">$149</span></span>
+            <button class="cart-btn" data-i18n-title="cart_title" title="أضف إلى السلة"><i class="fas fa-bag-shopping"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="product-card reveal" style="transition-delay:0.15s">
+        <div class="preview" style="background:url('IRON.png') center/contain no-repeat;background-color:#0a0a14">
+          <div class="preview-pattern"></div>
+          <div class="preview-grid"></div>
+          <div class="play-btn" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);opacity:1;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);width:auto;height:auto;border-radius:50px;padding:8px 16px;gap:6px;display:flex;align-items:center;color:#fff;font-size:12px">
+            <i class="fas fa-play"></i> <span data-i18n="preview_btn">معاينة</span>
+          </div>
+        </div>
+        <div class="info">
+          <span class="tag tag-new" data-i18n="tag_silver">جديد</span>
+          <h3 data-i18n="silver_name">الباقة الفضية</h3>
+          <p data-i18n="silver_desc">أكثر من 500 انتقالة احترافية و 150 تيتر سينمائي و 200 لوت احترافي — مثالية للمبتدئين والمحترفين</p>
+          <div class="bottom">
+            <span class="price"><span class="old" data-i18n="silver_old">$149</span><span data-i18n="silver_price">$79</span></span>
+            <button class="cart-btn" data-i18n-title="cart_title" title="أضف إلى السلة"><i class="fas fa-bag-shopping"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="product-card reveal" style="transition-delay:0.25s">
+        <div class="preview" style="background:url('Mon.png') center/contain no-repeat;background-color:#0a0a14">
+          <div class="preview-pattern"></div>
+          <div class="preview-grid"></div>
+          <div class="play-btn" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);opacity:1;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);width:auto;height:auto;border-radius:50px;padding:8px 16px;gap:6px;display:flex;align-items:center;color:#fff;font-size:12px">
+            <i class="fas fa-play"></i> <span data-i18n="preview_btn">معاينة</span>
+          </div>
+        </div>
+        <div class="info">
+          <span class="tag tag-sale" data-i18n="tag_mon">مونتاج</span>
+          <h3 data-i18n="mon_name">باقة المونتاج</h3>
+          <p data-i18n="mon_desc">بريسات مونتاج احترافية مع قوالب جاهزة للتعديل — مثالية للمونتاج السريع والمقاطع القصيرة</p>
+          <div class="bottom">
+            <span class="price"><span class="old" data-i18n="mon_old">$99</span><span data-i18n="mon_price">$49</span></span>
+            <button class="cart-btn" data-i18n-title="cart_title" title="أضف إلى السلة"><i class="fas fa-bag-shopping"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="container">
+    <div class="features-grid">
+      <div class="feature-item reveal-scale" style="transition-delay:0.05s">
+        <div class="icon-wrap"><i class="fas fa-bolt"></i></div>
+        <h4 data-i18n="f1_title">جاهز للاستخدام الفوري</h4>
+        <p data-i18n="f1_desc">حمّل واسحب وابدأ — لا تحتاج أي خبرة تقنية</p>
+      </div>
+      <div class="feature-item reveal-scale" style="transition-delay:0.15s">
+        <div class="icon-wrap"><i class="fas fa-arrows-rotate"></i></div>
+        <h4 data-i18n="f2_title">متوافق مع جميع البرامج</h4>
+        <p data-i18n="f2_desc">Premiere Pro, After Effects, DaVinci Resolve, Final Cut</p>
+      </div>
+      <div class="feature-item reveal-scale" style="transition-delay:0.25s">
+        <div class="icon-wrap"><i class="fas fa-rotate"></i></div>
+        <h4 data-i18n="f3_title">تحديثات مجانية مدى الحياة</h4>
+        <p data-i18n="f3_desc">نضيف منتجات جديدة باستمرار وترقيات مجانية</p>
+      </div>
+      <div class="feature-item reveal-scale" style="transition-delay:0.35s">
+        <div class="icon-wrap"><i class="fas fa-headset"></i></div>
+        <h4 data-i18n="f4_title">دعم فني على مدار الساعة</h4>
+        <p data-i18n="f4_desc">فريق من خبراء المونتاج يجاوبون استفساراتك</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="showreel" id="showreel">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2 data-i18n="showreel_title">شاهد العرض التعريفي</h2>
+      <p data-i18n="showreel_subtitle">مونتاج احترافي باستخدام منتجاتنا — شاهد بنفسك الفرق</p>
+    </div>
+    <div class="video-placeholder reveal-scale" style="padding-bottom:56.25%;height:0;position:relative">
+      <iframe src="https://www.youtube.com/embed/2bhGk9zLZHM" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;border-radius:20px" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-title reveal">
+      <h2 data-i18n="testimonials_title">ماذا يقول المبدعون؟</h2>
+      <p data-i18n="testimonials_subtitle">أكثر من 12 ألف عميل حول العالم يثقون بمنتجاتنا</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal" style="transition-delay:0.05s">
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <blockquote data-i18n="t1_quote">"منتجات خرافية! الباقة الاحترافية غيرت شكل قناتي بالكامل. الترانزيشنات ناعمة وسلسة جداً."</blockquote>
+        <div class="author">
+          <div class="avatar" style="background:linear-gradient(135deg,#059669,#10b981)">أ</div>
+          <div><div class="name" data-i18n="t1_name">أحمد السعيد</div><div class="title" data-i18n="t1_title">مونتير محترف — السعودية</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:0.15s">
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <blockquote data-i18n="t2_quote">"جربت كثير منتجات لكن مونتاج برو فعلاً مختلف. الجودة والتواصل مع الدعم الفني ممتاز جداً."</blockquote>
+        <div class="author">
+          <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">ن</div>
+          <div><div class="name" data-i18n="t2_name">نورة الفهد</div><div class="title" data-i18n="t2_title">صانعة محتوى — الكويت</div></div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:0.25s">
+        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+        <blockquote data-i18n="t3_quote">"شريت الألتميت بندل، يستحق كل ريال. كل شيء منظم ومصنف وسهل الاستخدام. أنصح وبقوة!"</blockquote>
+        <div class="author">
+          <div class="avatar" style="background:linear-gradient(135deg,#14b8a6,#3b82f6)">م</div>
+          <div><div class="name" data-i18n="t3_name">محمد الغامدي</div><div class="title" data-i18n="t3_title">منتج فيديو — الإمارات</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <h2 class="reveal" data-i18n="cta_title">انضم لأكثر من <span class="gradient">12,000</span> مبدع</h2>
+    <p class="reveal" style="transition-delay:0.1s" data-i18n="cta_subtitle">اشتري مرة واستخدم مدى الحياة — تحديثات مجانية + دعم فني مضمون</p>
+    <a href="#products" class="btn btn-primary btn-lg btn-glow reveal" style="transition-delay:0.2s" data-i18n="cta_btn">ابدأ الآن</a>
+    <div class="guarantee reveal" style="transition-delay:0.3s">
+      <span><i class="fas fa-cloud-arrow-down" style="color:#22c55e"></i> <span data-i18n="guarantee3">تحميل فوري</span></span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="social">
+      <a href="#" data-i18n-title="social_yt" title="يوتيوب"><i class="fab fa-youtube"></i></a>
+      <a href="#" data-i18n-title="social_ig" title="انستغرام"><i class="fab fa-instagram"></i></a>
+      <a href="#" data-i18n-title="social_x" title="تويتر"><i class="fab fa-x-twitter"></i></a>
+      <a href="#" data-i18n-title="social_tt" title="تيك توك"><i class="fab fa-tiktok"></i></a>
+    </div>
+    <div class="logo">MONTAGE PRO</div>
+    <p data-i18n="footer_text">© 2025 جميع الحقوق محفوظة. صنع للمبدعين، بالمبدعين.</p>
+  </div>
+</footer>
+
+<div id="music-toggle" title="تشغيل/إيقاف الموسيقى" class="playing"><i class="fas fa-music"></i></div>
+<audio id="bg-music" autoplay loop style="display:none" preload="auto">
+  <source src="BBB.mp3" type="audio/mpeg">
+</audio>
+<script>
+  // ===== TRANSLATIONS =====
+  const LANGUAGES = [
+    {code:'ar',name:'العربية',dir:'rtl'},{code:'en',name:'English',dir:'ltr'},
+    {code:'fr',name:'Fran\u00e7ais',dir:'ltr'},{code:'es',name:'Espa\u00f1ol',dir:'ltr'},
+    {code:'de',name:'Deutsch',dir:'ltr'},
+  ];
+  const t = {};
+  function loadLang(code) {
+    const L = langs[code];
+    if (!L) return;
+    Object.assign(t, L);
+    document.documentElement.lang = code;
+    document.documentElement.dir = L._dir;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (t[key] !== undefined) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = t[key];
+        else el.innerHTML = t[key];
+      }
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.dataset.i18nTitle;
+      if (t[key] !== undefined) el.title = t[key];
+    });
+    document.querySelectorAll('.lang-option').forEach(el => {
+      el.classList.toggle('active', el.dataset.lang === code);
+    });
+    localStorage.setItem('lang', code);
+  }
+  function initLangPanel() {
+    const list = document.getElementById('lang-list');
+    LANGUAGES.forEach(l => {
+      const btn = document.createElement('button');
+      btn.className = 'lang-option';
+      btn.dataset.lang = l.code;
+      btn.innerHTML = '<span class="native">'+l.name+'</span><span class="en-name">'+l.code.toUpperCase()+'</span>';
+      btn.addEventListener('click', () => { loadLang(l.code); document.getElementById('lang-panel').classList.remove('open'); });
+      list.appendChild(btn);
+    });
+    document.getElementById('lang-btn').addEventListener('click', () => document.getElementById('lang-panel').classList.add('open'));
+    document.getElementById('lang-panel-close').addEventListener('click', () => document.getElementById('lang-panel').classList.remove('open'));
+    document.getElementById('lang-panel').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
+  }
+
+  // ===== GLOBAL MOUSE COORDS =====
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+  // ===== BLURRED SPOTLIGHT =====
+  const glowBlur = document.getElementById('glow-blur');
+  const blurGlow = document.createElement('div');
+  blurGlow.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;mix-blend-mode:screen;';
+  document.body.appendChild(blurGlow);
+
+  function updateSpotlight() {
+    const px = mx / window.innerWidth * 100;
+    const py = my / window.innerHeight * 100;
+    glowBlur.style.setProperty('--mx', px + '%');
+    glowBlur.style.setProperty('--my', py + '%');
+    blurGlow.style.background = `radial-gradient(300px at ${mx}px ${my}px, rgba(5,150,105,0.04), rgba(5,150,105,0.01) 40%, transparent 70%)`;
+    blurGlow.style.filter = 'blur(20px)';
+    requestAnimationFrame(updateSpotlight);
+  }
+  updateSpotlight();
+
+  // ===== PARTICLES =====
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let mouseInfluence = { x: 0, y: 0 };
+  let animRunning = true;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  document.addEventListener('mousemove', e => {
+    mouseInfluence.x = e.clientX;
+    mouseInfluence.y = e.clientY;
+  });
+
+  class Particle {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = (Math.random() - 0.5) * 0.2;
+      this.speedY = (Math.random() - 0.5) * 0.2;
+      this.opacity = Math.random() * 0.25 + 0.05;
+    }
+    update() {
+      const dx = mouseInfluence.x - this.x;
+      const dy = mouseInfluence.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 200) {
+        const force = (1 - dist / 200) * 0.01;
+        this.speedX -= dx * force;
+        this.speedY -= dy * force;
+      }
+      this.speedX *= 0.98;
+      this.speedY *= 0.98;
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < -50 || this.x > canvas.width + 50 || this.y < -50 || this.y > canvas.height + 50) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(5,150,105,${this.opacity})`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 35; i++) particles.push(new Particle());
+
+  function animateParticles() {
+    if (!animRunning) { requestAnimationFrame(animateParticles); return; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 80) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(5,150,105,${0.02 * (1 - dist / 80)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+
+  // ===== DUST PARTICLES (فوق الفيديو) =====
+  const dustCanvas = document.createElement('canvas');
+  dustCanvas.id = 'dust-canvas';
+  dustCanvas.width = window.innerWidth;
+  dustCanvas.height = window.innerHeight;
+  document.body.appendChild(dustCanvas);
+  const dustCtx = dustCanvas.getContext('2d');
+  window.addEventListener('resize', () => { dustCanvas.width = window.innerWidth; dustCanvas.height = window.innerHeight; });
+
+  const dustParticles = [];
+  for (let i = 0; i < 50; i++) {
+    dustParticles.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: Math.random() * 4 + 1.5,
+      speedX: (Math.random() - 0.5) * 0.6,
+      speedY: (Math.random() - 0.5) * 0.48 - 0.08,
+      opacity: Math.random() * 0.12 + 0.04,
+      life: Math.random() * 200 + 100,
+    });
+  }
+
+  function animateDust() {
+    dustCtx.clearRect(0, 0, dustCanvas.width, dustCanvas.height);
+    for (let i = 0; i < dustParticles.length; i++) {
+      const p = dustParticles[i];
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.life -= 0.25;
+      if (p.life < 0 || p.x < -20 || p.x > dustCanvas.width + 20 || p.y < -20 || p.y > dustCanvas.height + 20) {
+        p.x = Math.random() * dustCanvas.width;
+        p.y = Math.random() * dustCanvas.height;
+        p.speedX = (Math.random() - 0.5) * 0.6;
+        p.speedY = (Math.random() - 0.5) * 0.48 - 0.08;
+        p.life = Math.random() * 300 + 100;
+        p.size = Math.random() * 4 + 1.5;
+        p.opacity = Math.random() * 0.12 + 0.04;
+      }
+      const pulse = 1 + Math.sin(p.life * 0.03) * 0.3;
+      dustCtx.beginPath();
+      dustCtx.arc(p.x, p.y, p.size * pulse, 0, Math.PI * 2);
+      const grad = dustCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * pulse);
+      grad.addColorStop(0, `rgba(255,255,255,${p.opacity})`);
+      grad.addColorStop(1, `rgba(255,255,255,0)`);
+      dustCtx.fillStyle = grad;
+      dustCtx.fill();
+    }
+    requestAnimationFrame(animateDust);
+  }
+  animateDust();
+
+  // ===== SCROLL REVEAL =====
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal, .reveal-scale').forEach(el => observer.observe(el));
+
+  // ===== HEADER SCROLL =====
+  window.addEventListener('scroll', () => {
+    document.querySelector('header').classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // ===== SMOOTH SCROLL =====
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(anchor.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // ===== 3D TILT ON CARDS =====
+  document.querySelectorAll('.product-card, .testimonial-card, .feature-item').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      el.style.transform = el.classList.contains('product-card')
+        ? `translateY(-12px) perspective(800px) rotateY(${x * 12}deg) rotateX(${y * -8}deg)`
+        : `perspective(600px) rotateY(${x * 6}deg) rotateX(${y * -4}deg)`;
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = el.classList.contains('product-card')
+        ? 'translateY(0) perspective(800px) rotateY(0deg) rotateX(0deg)'
+        : 'perspective(600px) rotateY(0deg) rotateX(0deg)';
+    });
+  });
+
+  // ===== HERO MOCKUP 3D =====
+  const mockup = document.querySelector('.hero-image .mockup');
+  if (mockup) {
+    const mockupFloats = mockup.querySelectorAll('.floating-icon');
+    document.querySelector('.hero').addEventListener('mousemove', e => {
+      const rect = mockup.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
+      const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+      mockup.style.transform = `rotateY(${x * 10}deg) rotateX(${y * -8}deg)`;
+      mockupFloats.forEach((el, i) => {
+        const depth = (i + 1) * 8;
+        el.style.transform = `translateX(${x * depth}px) translateY(${y * depth}px)`;
+      });
+    });
+    document.querySelector('.hero').addEventListener('mouseleave', () => {
+      mockup.style.transform = 'rotateY(0deg) rotateX(0deg)';
+      mockupFloats.forEach(el => { el.style.transform = 'translateX(0) translateY(0)'; });
+    });
+  }
+
+  // ===== MAGNETIC BUTTONS =====
+  document.querySelectorAll('.btn-primary, .btn-outline, .btn-white, .btn-glow').forEach(btn => {
+    btn.addEventListener('mousemove', e => {
+      if (btn.closest('.hero-buttons') || btn.closest('.cta') || btn.closest('header')) {
+        const rect = btn.getBoundingClientRect();
+        const x = (e.clientX - rect.left - rect.width / 2) * 0.2;
+        const y = (e.clientY - rect.top - rect.height / 2) * 0.2;
+        btn.style.transform = `translate(${x}px, ${y}px)`;
+      }
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+    });
+  });
+
+  // ===== RIPPLE EFFECT ON BUTTONS =====
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.cssText = `
+        position:absolute; border-radius:50%;
+        width:${size}px; height:${size}px;
+        left:${e.clientX - rect.left - size / 2}px;
+        top:${e.clientY - rect.top - size / 2}px;
+        background:rgba(255,255,255,0.2);
+        transform:scale(0); animation:ripple-anim 0.6s ease-out;
+        pointer-events:none;
+      `;
+      this.style.position = 'relative';
+      this.style.overflow = 'hidden';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 700);
+    });
+  });
+
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = `@keyframes ripple-anim { to { transform:scale(3); opacity:0; } }`;
+  document.head.appendChild(styleSheet);
+
+  // ===== PARALLAX ON SCROLL =====
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    document.querySelectorAll('.hero .floating-icon').forEach((el, i) => {
+      const speed = 0.05 + i * 0.03;
+      el.style.transform = `translateY(${scrolled * speed}px)`;
+    });
+  });
+
+  const langs = {
+    ar: {
+      _dir:'rtl',settings_title:'الإعدادات',header_cta:'تسوق الآن',
+      nav_products:'المنتجات',nav_features:'المميزات',nav_showreel:'عرض',nav_testimonials:'التقييمات',
+      hero_badge:'أقوى ملحقات المونتاج لعام 2025',hero_title:'ارفع مستوى <span class="gradient">فيديوهاتك</span> بإحترافية',hero_desc:'مجموعة متكاملة من المؤثرات البصرية، الانتقالات، التيتلات، والبريستات الجاهزة لبرامج المونتاج — صممت خصيصاً للمبدعين.',
+      hero_btn_products:'استعرض المنتجات',hero_btn_showreel:'شاهد العرض',
+      stat1_val:'+350',stat1_label:'منتج احترافي',stat2_val:'+12K',stat2_label:'زبون حول العالم',stat3_val:'4.9/5',stat3_label:'متوسط التقييمات',
+      scroll_down:'اسحب للأسفل',
+      products_title:'اختر باقتك المثالية',products_subtitle:'منتجات رقمية جاهزة للتحميل والاستخدام مباشرة في مشاريعك',
+      tag_gold:'الأكثر مبيعاً',gold_name:'الباقة الذهبية',gold_desc:'كل ملحقات المونتاج في حزمة واحدة متكاملة — ترانزيشن، تيترات، لوتس، مؤثرات صوتية، بريسات موشن جرافيك — تحديثات مدى الحياة ودعم فني أولوية',gold_old:'$299',gold_price:'$149',
+      tag_silver:'جديد',silver_name:'الباقة الفضية',silver_desc:'أكثر من 500 انتقالة احترافية و 150 تيتر سينمائي و 200 لوت احترافي — مثالية للمبتدئين والمحترفين',silver_old:'$149',silver_price:'$79',
+      tag_mon:'مونتاج',mon_name:'باقة المونتاج',mon_desc:'بريسات مونتاج احترافية مع قوالب جاهزة للتعديل — مثالية للمونتاج السريع والمقاطع القصيرة',mon_old:'$99',mon_price:'$49',
+      cart_title:'أضف إلى السلة',preview_btn:'معاينة',
+      features_title:'لماذا مونتاج برو؟',features_subtitle:'جودة احترافية — تصميم عصري — توافق تام مع كل البرامج',
+      f1_title:'جاهز للاستخدام الفوري',f1_desc:'حمّل واسحب وابدأ — لا تحتاج أي خبرة تقنية',
+      f2_title:'متوافق مع جميع البرامج',f2_desc:'Premiere Pro, After Effects, DaVinci Resolve, Final Cut',
+      f3_title:'تحديثات مجانية مدى الحياة',f3_desc:'نضيف منتجات جديدة باستمرار وترقيات مجانية',
+      f4_title:'دعم فني على مدار الساعة',f4_desc:'فريق من خبراء المونتاج يجاوبون استفساراتك',
+      showreel_title:'شاهد العرض التعريفي',showreel_subtitle:'مونتاج احترافي باستخدام منتجاتنا — شاهد بنفسك الفرق',
+      testimonials_title:'ماذا يقول المبدعون؟',testimonials_subtitle:'أكثر من 12 ألف عميل حول العالم يثقون بمنتجاتنا',
+      t1_quote:'"منتجات خرافية! الباقة الاحترافية غيرت شكل قناتي بالكامل. الترانزيشنات ناعمة وسلسة جداً."',t1_name:'أحمد السعيد',t1_title:'مونتير محترف — السعودية',
+      t2_quote:'"جربت كثير منتجات لكن مونتاج برو فعلاً مختلف. الجودة والتواصل مع الدعم الفني ممتاز جداً."',t2_name:'نورة الفهد',t2_title:'صانعة محتوى — الكويت',
+      t3_quote:'"شريت الألتميت بندل، يستحق كل ريال. كل شيء منظم ومصنف وسهل الاستخدام. أنصح وبقوة!"',t3_name:'محمد الغامدي',t3_title:'منتج فيديو — الإمارات',
+      cta_title:'انضم لأكثر من <span class="gradient">12,000</span> مبدع',cta_subtitle:'اشتري مرة واستخدم مدى الحياة — تحديثات مجانية + دعم فني مضمون',cta_btn:'ابدأ الآن',
+      guarantee1:'ضمان استرجاع 30 يوماً',guarantee2:'دفع آمن',guarantee3:'تحميل فوري',
+      social_yt:'يوتيوب',social_ig:'انستغرام',social_x:'تويتر',social_tt:'تيك توك',
+      footer_text:'© 2025 جميع الحقوق محفوظة. صنع للمبدعين، بالمبدعين.',
+    },
+    en: {
+      _dir:'ltr',settings_title:'Settings',header_cta:'Shop Now',
+      nav_products:'Products',nav_features:'Features',nav_showreel:'Showreel',nav_testimonials:'Reviews',
+      hero_badge:'The Best Montage Assets of 2025',hero_title:'Elevate Your <span class="gradient">Videos</span> to Pro Level',hero_desc:'A complete collection of visual effects, transitions, titles, and presets for editing software — designed specifically for creators.',
+      hero_btn_products:'Browse Products',hero_btn_showreel:'Watch Showreel',
+      stat1_val:'+350',stat1_label:'Pro Products',stat2_val:'+12K',stat2_label:'Customers Worldwide',stat3_val:'4.9/5',stat3_label:'Average Rating',
+      scroll_down:'Scroll Down',
+      products_title:'Choose Your Perfect Pack',products_subtitle:'Digital products ready to download and use directly in your projects',
+      tag_gold:'Best Seller',gold_name:'Gold Bundle',gold_desc:'All-in-one complete montage assets pack — transitions, titles, LUTs, SFX, motion graphics presets — lifetime updates & priority support',gold_old:'$299',gold_price:'$149',
+      tag_silver:'New',silver_name:'Silver Bundle',silver_desc:'500+ pro transitions, 150 cinematic titles & 200 pro LUTs — perfect for beginners and professionals',silver_old:'$149',silver_price:'$79',
+      tag_mon:'Montage',mon_name:'Montage Pack',mon_desc:'Pro montage presets with ready-to-edit templates — perfect for fast editing and short clips',mon_old:'$99',mon_price:'$49',
+      cart_title:'Add to Cart',preview_btn:'Preview',
+      features_title:'Why Montage Pro?',features_subtitle:'Pro Quality — Modern Design — Full Compatibility',
+      f1_title:'Ready for Instant Use',f1_desc:'Download, drag, and start — no technical skills needed',
+      f2_title:'Compatible with All Software',f2_desc:'Premiere Pro, After Effects, DaVinci Resolve, Final Cut',
+      f3_title:'Free Lifetime Updates',f3_desc:'We constantly add new products and free upgrades',
+      f4_title:'24/7 Technical Support',f4_desc:'A team of editing experts answers your questions',
+      showreel_title:'Watch the Showreel',showreel_subtitle:'Professional editing using our products — see the difference yourself',
+      testimonials_title:'What Creators Say',testimonials_subtitle:'Over 12,000 customers worldwide trust our products',
+      t1_quote:'"Amazing products! The pro pack completely transformed my channel. The transitions are so smooth and seamless."',t1_name:'Ahmed Al-Saeed',t1_title:'Professional Editor — Saudi Arabia',
+      t2_quote:"I've tried many products but Montage Pro is truly different. Quality and support are excellent.",t2_name:'Noura Al-Fahad',t2_title:'Content Creator — Kuwait',
+      t3_quote:'"Bought the Ultimate Bundle, worth every penny. Everything is organized and easy to use. Highly recommended!"',t3_name:'Mohammed Al-Ghamdi',t3_title:'Video Producer — UAE',
+      cta_title:'Join Over <span class="gradient">12,000</span> Creators',cta_subtitle:'Buy once, use forever — free updates + guaranteed support',cta_btn:'Get Started',
+      guarantee1:'30-Day Money-Back Guarantee',guarantee2:'Secure Payment',guarantee3:'Instant Download',
+      social_yt:'YouTube',social_ig:'Instagram',social_x:'Twitter',social_tt:'TikTok',
+      footer_text:'\u00a9 2025 All rights reserved. Made for creators, by creators.',
+    },
+    fr: {
+      _dir:'ltr',settings_title:'Param\u00e8tres',header_cta:'Acheter',
+      nav_products:'Produits',nav_features:'Fonctionnalit\u00e9s',nav_showreel:'D\u00e9mo',nav_testimonials:'Avis',
+      hero_badge:'Les meilleurs assets montage de 2025',hero_title:'\u00c9levez vos <span class="gradient">vid\u00e9os</span> au niveau pro',hero_desc:"Une collection compl\u00e8te d'effets visuels, transitions, titres et presets pr\u00eats pour les logiciels de montage \u2014 con\u00e7us pour les cr\u00e9ateurs.",
+      hero_btn_products:'Voir les produits',hero_btn_showreel:'Voir la d\u00e9mo',
+      stat1_val:'+350',stat1_label:'Produits pro',stat2_val:'+12K',stat2_label:'Clients dans le monde',stat3_val:'4.9/5',stat3_label:'Note moyenne',
+      scroll_down:'D\u00e9filer',
+      products_title:'Choisissez votre pack id\u00e9al',products_subtitle:'Produits num\u00e9riques pr\u00eats \u00e0 t\u00e9l\u00e9charger et utiliser directement dans vos projets',
+      tag_gold:'Meilleure vente',gold_name:'Pack Or',gold_desc:'Pack complet d\u2019assets de montage tout-en-un \u2014 transitions, titres, LUTs, SFX, presets motion \u2014 mises \u00e0 jour \u00e0 vie & support prioritaire',gold_old:'299$',gold_price:'149$',
+      tag_silver:'Nouveau',silver_name:'Pack Argent',silver_desc:'500+ transitions pro, 150 titres cin\u00e9matographiques & 200 LUTs pro \u2014 parfait pour d\u00e9butants et professionnels',silver_old:'149$',silver_price:'79$',
+      tag_mon:'Montage',mon_name:'Pack Montage',mon_desc:'Presets de montage pro avec mod\u00e8les pr\u00eats \u00e0 modifier \u2014 parfait pour un montage rapide et des clips courts',mon_old:'99$',mon_price:'49$',
+      cart_title:'Ajouter au panier',preview_btn:'Aper\u00e7u',
+      features_title:'Pourquoi Montage Pro ?',features_subtitle:'Qualit\u00e9 pro \u2014 Design moderne \u2014 Compatibilit\u00e9 totale',
+      f1_title:"Pr\u00eat \u00e0 l'emploi",f1_desc:'T\u00e9l\u00e9chargez, glissez et commencez \u2014 aucune comp\u00e9tence technique requise',
+      f2_title:'Compatible avec tous les logiciels',f2_desc:'Premiere Pro, After Effects, DaVinci Resolve, Final Cut',
+      f3_title:'Mises \u00e0 jour gratuites \u00e0 vie',f3_desc:'Nous ajoutons r\u00e9guli\u00e8rement de nouveaux produits et mises \u00e0 niveau gratuites',
+      f4_title:'Support technique 24/7',f4_desc:"Une \u00e9quipe d'experts r\u00e9pond \u00e0 vos questions",
+      showreel_title:'Regardez la d\u00e9mo',showreel_subtitle:'Montage professionnel avec nos produits \u2014 voyez la diff\u00e9rence',
+      testimonials_title:'Ce que disent les cr\u00e9ateurs',testimonials_subtitle:'Plus de 12 000 clients dans le monde nous font confiance',
+      t1_quote:'"Produits incroyables ! Le pack pro a transform\u00e9 ma cha\u00eene. Les transitions sont super fluides."',t1_name:'Ahmed Al-Saeed',t1_title:'Monteur pro \u2014 Arabie Saoudite',
+      t2_quote:"J'ai essay\u00e9 beaucoup de produits mais Montage Pro est vraiment diff\u00e9rent. Qualit\u00e9 et support excellents.",t2_name:'Noura Al-Fahad',t2_title:'Cr\u00e9atrice de contenu \u2014 Kowe\u00eft',
+      t3_quote:"J'ai achet\u00e9 le pack ultime, \u00e7a vaut chaque centime. Tout est organis\u00e9 et facile \u00e0 utiliser. Je recommande !",t3_name:'Mohammed Al-Ghamdi',t3_title:'Producteur vid\u00e9o \u2014 \u00c9mirats',
+      cta_title:'Rejoignez plus de <span class="gradient">12 000</span> cr\u00e9ateurs',cta_subtitle:'Achetez une fois, utilisez pour toujours \u2014 mises \u00e0 jour gratuites + support garanti',cta_btn:'Commencer',
+      guarantee1:'Garantie 30 jours rembours\u00e9',guarantee2:'Paiement s\u00e9curis\u00e9',guarantee3:'T\u00e9l\u00e9chargement instantan\u00e9',
+      social_yt:'YouTube',social_ig:'Instagram',social_x:'Twitter',social_tt:'TikTok',
+      footer_text:'\u00a9 2025 Tous droits r\u00e9serv\u00e9s. Fait par des cr\u00e9ateurs, pour des cr\u00e9ateurs.',
+    },
+    es: {
+      _dir:'ltr',settings_title:'Ajustes',header_cta:'Comprar',
+      nav_products:'Productos',nav_features:'Caracter\u00edsticas',nav_showreel:'Demo',nav_testimonials:'Rese\u00f1as',
+      hero_badge:'Los mejores assets de edici\u00f3n 2025',hero_title:'Lleva tus <span class="gradient">videos</span> al nivel pro',hero_desc:'Colecci\u00f3n completa de efectos visuales, transiciones, t\u00edtulos y presets listos para software de edici\u00f3n \u2014 dise\u00f1ados para creadores.',
+      hero_btn_products:'Ver productos',hero_btn_showreel:'Ver demo',
+      stat1_val:'+350',stat1_label:'Productos pro',stat2_val:'+12K',stat2_label:'Clientes globales',stat3_val:'4.9/5',stat3_label:'Valoraci\u00f3n media',
+      scroll_down:'Desplazar',
+      products_title:'Elige tu pack perfecto',products_subtitle:'Productos digitales listos para descargar y usar directamente en tus proyectos',
+      tag_gold:'M\u00e1s vendido',gold_name:'Pack Dorado',gold_desc:'Pack completo de assets de montaje todo-en-uno \u2014 transiciones, t\u00edtulos, LUTs, SFX, presets motion \u2014 actualizaciones de por vida & soporte prioritario',gold_old:'$299',gold_price:'$149',
+      tag_silver:'Nuevo',silver_name:'Pack Plateado',silver_desc:'500+ transiciones pro, 150 t\u00edtulos cinematogr\u00e1ficos & 200 LUTs pro \u2014 perfecto para principiantes y profesionales',silver_old:'$149',silver_price:'$79',
+      tag_mon:'Montaje',mon_name:'Pack Montaje',mon_desc:'Presets de montaje pro con plantillas listas para editar \u2014 ideal para montaje r\u00e1pido y clips cortos',mon_old:'$99',mon_price:'$49',
+      cart_title:'A\u00f1adir al carrito',preview_btn:'Vista previa',
+      features_title:'\u00bfPor qu\u00e9 Montage Pro?',features_subtitle:'Calidad pro \u2014 Dise\u00f1o moderno \u2014 Compatibilidad total',
+      f1_title:'Listo para usar ya',f1_desc:'Descarga, arrastra y empieza \u2014 sin experiencia t\u00e9cnica',
+      f2_title:'Compatible con todo software',f2_desc:'Premiere Pro, After Effects, DaVinci Resolve, Final Cut',
+      f3_title:'Actualizaciones gratis de por vida',f3_desc:'A\u00f1adimos nuevos productos y actualizaciones constantemente',
+      f4_title:'Soporte t\u00e9cnico 24/7',f4_desc:'Un equipo de expertos responde tus dudas',
+      showreel_title:'Ver demo',showreel_subtitle:'Edici\u00f3n profesional con nuestros productos \u2014 comprueba la diferencia',
+      testimonials_title:'Opiniones de creadores',testimonials_subtitle:'M\u00e1s de 12 000 clientes globales conf\u00edan en nosotros',
+      t1_quote:'"\u00a1Productos incre\u00edbles! El pack pro transform\u00f3 mi canal. Las transiciones son muy suaves."',t1_name:'Ahmed Al-Saeed',t1_title:'Editor profesional \u2014 Arabia Saud\u00ed',
+      t2_quote:'"He probado muchos productos pero Montage Pro es diferente. Calidad y apoyo excelentes."',t2_name:'Noura Al-Fahad',t2_title:'Creadora de contenido \u2014 Kuwait',
+      t3_quote:'"Compr\u00e9 el pack definitivo, vale cada centavo. Organizado y f\u00e1cil de usar. \u00a1Muy recomendado!"',t3_name:'Mohammed Al-Ghamdi',t3_title:'Productor de video \u2014 EAU',
+      cta_title:'\u00danete a m\u00e1s de <span class="gradient">12,000</span> creadores',cta_subtitle:'Compra una vez, usa siempre \u2014 actualizaciones gratis + soporte',cta_btn:'Empezar',
+      guarantee1:'Garant\u00eda de 30 d\u00edas',guarantee2:'Pago seguro',guarantee3:'Descarga instant\u00e1nea',
+      social_yt:'YouTube',social_ig:'Instagram',social_x:'Twitter',social_tt:'TikTok',
+      footer_text:'\u00a9 2025 Todos los derechos reservados. Hecho por creadores, para creadores.',
+    },
+    de: {
+      _dir:'ltr',settings_title:'Einstellungen',header_cta:'Jetzt kaufen',
+      nav_products:'Produkte',nav_features:'Funktionen',nav_showreel:'Showreel',nav_testimonials:'Bewertungen',
+      hero_badge:'Die besten Montage-Assets 2025',hero_title:'Bringen Sie Ihre <span class="gradient">Videos</span> auf Profi-Niveau',hero_desc:'Eine komplette Sammlung von visuellen Effekten, \u00dcberg\u00e4ngen, Titeln und Presets f\u00fcr Schnittsoftware \u2014 entwickelt f\u00fcr Kreative.',
+      hero_btn_products:'Produkte ansehen',hero_btn_showreel:'Showreel ansehen',
+      stat1_val:'+350',stat1_label:'Pro-Produkte',stat2_val:'+12K',stat2_label:'Kunden weltweit',stat3_val:'4.9/5',stat3_label:'Durchschnittsbewertung',
+      scroll_down:'Nach unten scrollen',
+      products_title:'W\u00e4hlen Sie Ihr perfektes Paket',products_subtitle:'Digitale Produkte, bereit zum Herunterladen und direkten Einsatz in Ihren Projekten',
+      tag_gold:'Bestseller',gold_name:'Gold-Paket',gold_desc:'Komplettes All-in-One-Montage-Assets-Paket \u2014 \u00dcberg\u00e4nge, Titel, LUTs, SFX, Motion-Presets \u2014 lebenslange Updates & Priority-Support',gold_old:'$299',gold_price:'$149',
+      tag_silver:'Neu',silver_name:'Silber-Paket',silver_desc:'500+ Profi-\u00dcberg\u00e4nge, 150 filmische Titel & 200 Profi-LUTs \u2014 perfekt f\u00fcr Anf\u00e4nger und Profis',silver_old:'$149',silver_price:'$79',
+      tag_mon:'Montage',mon_name:'Montage-Paket',mon_desc:'Profi-Montage-Presets mit bearbeitbaren Vorlagen \u2014 perfekt f\u00fcr schnelle Bearbeitung und kurze Clips',mon_old:'$99',mon_price:'$49',
+      cart_title:'In den Warenkorb',preview_btn:'Vorschau',
+      features_title:'Warum Montage Pro?',features_subtitle:'Profi-Qualit\u00e4t \u2014 Modernes Design \u2014 Volle Kompatibilit\u00e4t',
+      f1_title:'Sofort einsatzbereit',f1_desc:'Herunterladen, ziehen und loslegen \u2014 keine technischen Kenntnisse n\u00f6tig',
+      f2_title:'Mit aller Software kompatibel',f2_desc:'Premiere Pro, After Effects, DaVinci Resolve, Final Cut',
+      f3_title:'Kostenlose lebenslange Updates',f3_desc:'Wir f\u00fcgen st\u00e4ndig neue Produkte und kostenlose Upgrades hinzu',
+      f4_title:'24/7 technischer Support',f4_desc:'Ein Team von Schnitt-Experten beantwortet Ihre Fragen',
+      showreel_title:'Showreel ansehen',showreel_subtitle:'Professioneller Schnitt mit unseren Produkten \u2014 sehen Sie selbst den Unterschied',
+      testimonials_title:'Was Kreative sagen',testimonials_subtitle:'\u00dcber 12.000 Kunden weltweit vertrauen unseren Produkten',
+      t1_quote:'"Unglaubliche Produkte! Das Pro-Pack hat meinen Kanal komplett verwandelt. Die \u00dcberg\u00e4nge sind butterweich."',t1_name:'Ahmed Al-Saeed',t1_title:'Profi-Editor \u2014 Saudi-Arabien',
+      t2_quote:'"Ich habe viele Produkte ausprobiert, aber Montage Pro ist wirklich anders. Hervorragende Qualit\u00e4t und Support."',t2_name:'Noura Al-Fahad',t2_title:'Content Creator \u2014 Kuwait',
+      t3_quote:'"Habe das Ultimate Bundle gekauft, jeden Cent wert. Alles organisiert und einfach zu bedienen. Sehr empfehlenswert!"',t3_name:'Mohammed Al-Ghamdi',t3_title:'Videoproduzent \u2014 VAE',
+      cta_title:'Schlie\u00dfen Sie sich \u00fcber <span class="gradient">12.000</span> Kreativen an',cta_subtitle:'Einmal kaufen, f\u00fcr immer nutzen \u2014 kostenlose Updates + Support',cta_btn:'Loslegen',
+      guarantee1:'30 Tage Geld-zur\u00fcck-Garantie',guarantee2:'Sichere Zahlung',guarantee3:'Sofortiger Download',
+      social_yt:'YouTube',social_ig:'Instagram',social_x:'Twitter',social_tt:'TikTok',
+      footer_text:'\u00a9 2025 Alle Rechte vorbehalten. Von Kreativen f\u00fcr Kreative.',
+    },
+  };
+  initLangPanel();
+  const savedLang = localStorage.getItem('lang') || 'ar';
+  loadLang(savedLang);
+
+  // ===== BACKGROUND MUSIC =====
+  const bgAudio = document.getElementById('bg-music');
+  bgAudio.volume = 0.3;
+  const audioToggle = document.getElementById('music-toggle');
+  let fadeInterval = null;
+  const fadeVolume = (to) => {
+    if (fadeInterval) { cancelAnimationFrame(fadeInterval); fadeInterval = null; }
+    const from = bgAudio.volume;
+    const start = performance.now(); const dur = 1200;
+    const step = (now) => {
+      const t = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      bgAudio.volume = from + (to - from) * ease;
+      if (t < 1) fadeInterval = requestAnimationFrame(step);
+    };
+    fadeInterval = requestAnimationFrame(step);
+  };
+  function togglePlay() {
+    if (bgAudio.paused) { bgAudio.play().catch(()=>{}); audioToggle.classList.add('playing'); }
+    else { bgAudio.pause(); audioToggle.classList.remove('playing'); }
+  }
+  audioToggle.addEventListener('click', togglePlay);
+  document.addEventListener('click', () => { bgAudio.play().catch(()=>{}); }, { once: true });
+</script>
+</body>
+</html>
