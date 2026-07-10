@@ -817,6 +817,7 @@
 <audio id="bg-music" autoplay loop style="display:none" preload="auto">
   <source src="BBB.mp3" type="audio/mpeg">
 </audio>
+<script>document.getElementById('bg-music').volume=0.05;</script>
 <script>
   // ===== TRANSLATIONS =====
   const LANGUAGES = [
@@ -1263,7 +1264,7 @@
 
   // ===== BACKGROUND MUSIC =====
   const bgAudio = document.getElementById('bg-music');
-  bgAudio.volume = 0.06;
+  bgAudio.volume = 0.05;
   const audioToggle = document.getElementById('music-toggle');
   let fadeInterval = null;
   const fadeVolume = (to) => {
