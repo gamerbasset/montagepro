@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -1026,9 +1028,8 @@
       <!-- Register Email Verification -->
       <div id="register-verify" style="display:none">
         <p style="color:#059669;font-size:12px;text-align:center;margin-bottom:14px" id="register-verify-msg"></p>
-        <div class="input-group">
-          <input type="text" id="register-verify-code" placeholder="أدخل رمز التحقق" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px" autocomplete="one-time-code">
-          <i class="fas fa-key"></i>
+        <div style="text-align:center;margin:16px 0">
+          <i class="fas fa-envelope-circle-check" style="font-size:48px;color:#059669;margin-bottom:12px"></i>
         </div>
         <div class="auth-error" id="register-verify-error"></div>
       </div>
@@ -1048,6 +1049,19 @@
 </audio>
 <script>document.getElementById('bg-music').volume=0.01;</script>
 <script>
+  // ===== FIREBASE INIT =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyBmvInEWn00lhYshbmZfUcu3ubM3GNydxI",
+    authDomain: "basset-cdf80.firebaseapp.com",
+    projectId: "basset-cdf80",
+    storageBucket: "basset-cdf80.firebasestorage.app",
+    messagingSenderId: "422091559857",
+    appId: "1:422091559857:web:1d3f4c3c76d726f643e390",
+    measurementId: "G-3VWWH94VW1"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const fbAuth = firebase.auth();
+
   // ===== TRANSLATIONS =====
   const LANGUAGES = [
     {code:'ar',name:'العربية',dir:'rtl'},{code:'en',name:'English',dir:'ltr'},
@@ -1811,7 +1825,7 @@
     el.addEventListener('mouseenter', playHoverSound);
   });
 
-  // ===== AUTH SYSTEM =====
+  // ===== AUTH SYSTEM (Firebase) =====
   const authOverlay = document.getElementById('auth-overlay');
   const authClose = document.getElementById('auth-close');
   const authTitle = document.getElementById('auth-title');
@@ -1842,37 +1856,15 @@
   const newpassError = document.getElementById('newpass-error');
   const forgotCodeMsg = document.getElementById('forgot-code-msg');
   const registerVerify = document.getElementById('register-verify');
-  const registerVerifyCode = document.getElementById('register-verify-code');
   const registerVerifyError = document.getElementById('register-verify-error');
   const registerVerifyMsg = document.getElementById('register-verify-msg');
 
   let isLogin = true;
   let authMode = 'login';
   let currentUser = null;
-  let resetEmail = '';
-  let resetCode = '';
-  let regPendingData = null;
-  let regCode = '';
-  let regCodeExpires = 0;
-
-  function getUsers() {
-    try { return JSON.parse(localStorage.getItem('mp_users')) || {}; }
-    catch(e) { return {}; }
-  }
-  function saveUsers(u) { localStorage.setItem('mp_users', JSON.stringify(u)); }
-  function getSession() {
-    try { return JSON.parse(localStorage.getItem('mp_session')); }
-    catch(e) { return null; }
-  }
-  function saveSession(s) { localStorage.setItem('mp_session', JSON.stringify(s)); }
-  function clearSession() { localStorage.removeItem('mp_session'); }
 
   function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
   function hideErr(el) { el.style.display = 'none'; }
-
-  function generateCode() {
-    return String(Math.floor(100000 + Math.random() * 900000));
-  }
 
   function resetAuthView() {
     authMode = 'login';
@@ -1898,10 +1890,8 @@
     if (forgotCode) forgotCode.value = '';
     if (newPass) newPass.value = '';
     if (newPass2) newPass2.value = '';
-    if (registerVerifyCode) registerVerifyCode.value = '';
     hideErr(authError); hideErr(forgotError); hideErr(codeError); hideErr(newpassError);
     if (registerVerifyError) hideErr(registerVerifyError);
-    regPendingData = null;
     updateAuthUI();
   }
 
@@ -1945,164 +1935,129 @@
     updateAuthUI();
   });
 
-  // Forgot password flow
+  // Forgot password flow (Firebase sends reset email)
   forgotLink.addEventListener('click', () => {
     authMode = 'forgot';
     authTitle.textContent = 'استرجاع الحساب';
-    authSubtitle.textContent = 'أدخل بريدك الإلكتروني لاستلام رمز التحقق';
+    authSubtitle.textContent = 'أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور';
     authFormFields.style.display = 'none';
-    forgotStep1.style.display = '';
+    authSubmitBtn.style.display = 'none';
+    authDivider.style.display = 'none';
+    switchMode.style.display = 'none';
+    forgotStep1.style.display = 'none';
     forgotStep2.style.display = 'none';
     forgotStep3.style.display = 'none';
+    if (registerVerify) registerVerify.style.display = 'none';
+    forgotStep1.style.display = '';
     hideErr(forgotError);
     forgotEmail.focus();
   });
 
-  // Forgot Step 1: submit email
+  // Forgot Step 1: submit email → Firebase sends reset link
   var forgotStep1Btn = document.createElement('button');
   forgotStep1Btn.className = 'auth-btn';
-  forgotStep1Btn.textContent = 'إرسال رمز التحقق';
+  forgotStep1Btn.textContent = 'إرسال رابط إعادة التعيين';
   forgotStep1Btn.style.marginTop = '10px';
   forgotStep1.appendChild(forgotStep1Btn);
 
-  forgotStep1Btn.addEventListener('click', () => {
+  forgotStep1Btn.addEventListener('click', async () => {
     hideErr(forgotError);
     const email = forgotEmail.value.trim();
     if (!email) { showErr(forgotError, 'البريد الإلكتروني مطلوب'); return; }
     if (!email.includes('@') || !email.includes('.')) { showErr(forgotError, 'البريد الإلكتروني غير صالح'); return; }
-    const users = getUsers();
-    if (!users[email]) { showErr(forgotError, 'لا يوجد حساب بهذا البريد الإلكتروني'); return; }
 
-    resetEmail = email;
-    resetCode = generateCode();
-
-    var resets = {};
-    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
-    resets[email] = { code: resetCode, expires: Date.now() + 10 * 60 * 1000 };
-    localStorage.setItem('mp_resets', JSON.stringify(resets));
-
-    authTitle.textContent = 'التحقق من البريد';
-    authSubtitle.textContent = 'أدخل الرمز المرسل إلى بريدك';
-    forgotStep1.style.display = 'none';
-    forgotStep2.style.display = '';
-    forgotCodeMsg.textContent = 'تم إرسال رمز التحقق إلى: ' + email;
-    hideErr(codeError);
-    console.log('=== RESET CODE ===', resetCode, '===');
-    notify('تم إرسال الرمز', 'رمز التحقق: ' + resetCode);
-    forgotCode.focus();
+    forgotStep1Btn.disabled = true;
+    forgotStep1Btn.textContent = 'جاري الإرسال...';
+    try {
+      await fbAuth.sendPasswordResetEmail(email);
+      authTitle.textContent = 'تم الإرسال!';
+      authSubtitle.textContent = 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك';
+      forgotStep1.style.display = '';
+      showErr(forgotError, 'تم الإرسال! تحقق من بريدك الإلكتروني');
+      forgotError.style.color = '#059669';
+      notify('تم الإرسال', 'تحقق من بريدك الإلكتروني: ' + email);
+    } catch(err) {
+      if (err.code === 'auth/user-not-found') showErr(forgotError, 'لا يوجد حساب بهذا البريد الإلكتروني');
+      else if (err.code === 'auth/invalid-email') showErr(forgotError, 'البريد الإلكتروني غير صالح');
+      else showErr(forgotError, 'حدث خطأ، حاول مرة أخرى');
+    }
+    forgotStep1Btn.disabled = false;
+    forgotStep1Btn.textContent = 'إرسال رابط إعادة التعيين';
   });
   forgotEmail.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep1Btn.click(); });
 
-  // Forgot Step 2: verify code
-  var forgotStep2Btn = document.createElement('button');
-  forgotStep2Btn.className = 'auth-btn';
-  forgotStep2Btn.textContent = 'تحقق من الرمز';
-  forgotStep2Btn.style.marginTop = '10px';
-  forgotStep2.appendChild(forgotStep2Btn);
-
-  forgotStep2Btn.addEventListener('click', () => {
-    hideErr(codeError);
-    const code = forgotCode.value.trim();
-    if (!code) { showErr(codeError, 'أدخل رمز التحقق'); return; }
-    if (code.length !== 6) { showErr(codeError, 'الرمز يجب أن يكون 6 أرقام'); return; }
-
-    var resets = {};
-    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
-    var resetData = resets[resetEmail];
-    if (!resetData) { showErr(codeError, 'انتهت صلاحية الرمز، حاول مرة أخرى'); return; }
-    if (Date.now() > resetData.expires) { delete resets[resetEmail]; localStorage.setItem('mp_resets', JSON.stringify(resets)); showErr(codeError, 'انتهت صلاحية الرمز (10 دقائق)'); return; }
-    if (code !== resetData.code) { showErr(codeError, 'الرمز غير صحيح'); return; }
-
-    authTitle.textContent = 'كلمة مرور جديدة';
-    authSubtitle.textContent = 'أدخل كلمة المرور الجديدة لحسابك';
-    forgotStep2.style.display = 'none';
-    forgotStep3.style.display = '';
-    hideErr(newpassError);
-    newPass.focus();
-  });
-  forgotCode.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep2Btn.click(); });
-
-  // Forgot Step 3: new password
-  var forgotStep3Btn = document.createElement('button');
-  forgotStep3Btn.className = 'auth-btn';
-  forgotStep3Btn.textContent = 'إعادة تعيين كلمة المرور';
-  forgotStep3Btn.style.marginTop = '10px';
-  forgotStep3.appendChild(forgotStep3Btn);
-
-  forgotStep3Btn.addEventListener('click', () => {
-    hideErr(newpassError);
-    const p1 = newPass.value;
-    const p2 = newPass2.value;
-    if (!p1) { showErr(newpassError, 'كلمة المرور الجديدة مطلوبة'); return; }
-    if (p1.length < 6) { showErr(newpassError, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
-    if (p1 !== p2) { showErr(newpassError, 'كلمتا المرور غير متطابقتين'); return; }
-
-    var users = getUsers();
-    if (!users[resetEmail]) { showErr(newpassError, 'الحساب غير موجود'); return; }
-    users[resetEmail].password = p1;
-    saveUsers(users);
-
-    var resets = {};
-    try { resets = JSON.parse(localStorage.getItem('mp_resets')) || {}; } catch(e) {}
-    delete resets[resetEmail];
-    localStorage.setItem('mp_resets', JSON.stringify(resets));
-
-    closeAuth();
-    playPurchaseSound();
-    notify('تم بنجاح!', 'تم تغيير كلمة المرور، يمكنك تسجيل الدخول الآن');
-  });
-  newPass.addEventListener('keydown', e => { if (e.key === 'Enter') newPass2.focus(); });
-  newPass2.addEventListener('keydown', e => { if (e.key === 'Enter') forgotStep3Btn.click(); });
-
-  // Register email verification
+  // Register email verification (Firebase sends verification email)
   if (registerVerify) {
     var regVerifyBtn = document.createElement('button');
     regVerifyBtn.className = 'auth-btn';
-    regVerifyBtn.textContent = 'تفعيل الحساب';
+    regVerifyBtn.textContent = 'إرسال رمز التحقق';
     regVerifyBtn.style.marginTop = '10px';
     registerVerify.appendChild(regVerifyBtn);
 
-    regVerifyBtn.addEventListener('click', () => {
-      hideErr(registerVerifyError);
-      const code = registerVerifyCode.value.trim();
-      if (!code) { showErr(registerVerifyError, 'أدخل رمز التحقق'); return; }
-      if (code.length !== 6) { showErr(registerVerifyError, 'الرمز يجب أن يكون 6 أرقام'); return; }
-      if (Date.now() > regCodeExpires) { showErr(registerVerifyError, 'انتهت صلاحية الرمز (10 دقائق)'); return; }
-      if (code !== regCode) { showErr(registerVerifyError, 'الرمز غير صحيح'); return; }
+    var regResendBtn = document.createElement('button');
+    regResendBtn.className = 'auth-btn';
+    regResendBtn.textContent = 'إعادة إرسال الرمز';
+    regResendBtn.style.marginTop = '8px';
+    regResendBtn.style.background = 'transparent';
+    regResendBtn.style.color = '#059669';
+    regResendBtn.style.border = '1px solid #059669';
+    registerVerify.appendChild(regResendBtn);
 
-      var users = getUsers();
-      users[regPendingData.email] = { username: regPendingData.username, password: regPendingData.password, joined: regPendingData.joined };
-      saveUsers(users);
-      currentUser = { email: regPendingData.email, username: regPendingData.username, joined: regPendingData.joined };
-      saveSession(currentUser);
-      regPendingData = null;
-      regCode = '';
-      closeAuth();
-      updateNavForUser();
-      playPurchaseSound();
-      notify('مرحباً ' + currentUser.username + '!', 'تم تفعيل حسابك بنجاح');
+    regVerifyBtn.addEventListener('click', async () => {
+      hideErr(registerVerifyError);
+      if (!fbAuth.currentUser) {
+        showErr(registerVerifyError, 'حدث خطأ، حاول مرة أخرى');
+        return;
+      }
+      try {
+        await fbAuth.currentUser.sendEmailVerification();
+        showErr(registerVerifyError, 'تم إرسال رمز التحقق إلى بريدك! تحقق من صندوق البريد');
+        registerVerifyError.style.color = '#059669';
+        notify('تم الإرسال', 'تحقق من بريدك الإلكتروني');
+      } catch(err) {
+        showErr(registerVerifyError, 'حدث خطأ في إرسال البريد');
+      }
     });
-    registerVerifyCode.addEventListener('keydown', e => { if (e.key === 'Enter') regVerifyBtn.click(); });
+
+    regResendBtn.addEventListener('click', async () => {
+      if (!fbAuth.currentUser) return;
+      try {
+        await fbAuth.currentUser.sendEmailVerification();
+        notify('تم الإرسال', 'تم إعادة إرسال البريد');
+      } catch(err) {}
+    });
   }
 
-  // Main submit: login or register
-  authSubmitBtn.addEventListener('click', () => {
+  // Main submit: login or register (Firebase Auth)
+  authSubmitBtn.addEventListener('click', async () => {
     hideErr(authError);
     if (isLogin) {
       const email = authEmail.value.trim();
       const pass = authPass.value;
       if (!email) { showErr(authError, 'البريد الإلكتروني مطلوب'); return; }
       if (!pass) { showErr(authError, 'كلمة المرور مطلوبة'); return; }
-      const users = getUsers();
-      const user = users[email];
-      if (!user) { showErr(authError, 'لا يوجد حساب بهذا البريد الإلكتروني، أنشئ حساباً جديداً'); return; }
-      if (user.password !== pass) { showErr(authError, 'كلمة المرور غير صحيحة'); return; }
-      currentUser = { email: email, username: user.username, joined: user.joined };
-      saveSession(currentUser);
-      closeAuth();
-      updateNavForUser();
-      playPurchaseSound();
-      notify('مرحباً ' + user.username + '!', 'تم تسجيل الدخول بنجاح');
+      authSubmitBtn.disabled = true;
+      authSubmitBtn.textContent = 'جاري تسجيل الدخول...';
+      try {
+        const cred = await fbAuth.signInWithEmailAndPassword(email, pass);
+        if (!cred.user.emailVerified) {
+          showErr(authError, 'لم يتم تحقق البريد الإلكتروني. تحقق من بريدك أولاً');
+          await fbAuth.signOut();
+          authSubmitBtn.disabled = false;
+          authSubmitBtn.textContent = 'تسجيل الدخول';
+          return;
+        }
+        closeAuth();
+        playPurchaseSound();
+      } catch(err) {
+        authSubmitBtn.disabled = false;
+        authSubmitBtn.textContent = 'تسجيل الدخول';
+        if (err.code === 'auth/user-not-found') showErr(authError, 'لا يوجد حساب بهذا البريد الإلكتروني');
+        else if (err.code === 'auth/wrong-password') showErr(authError, 'كلمة المرور غير صحيحة');
+        else if (err.code === 'auth/invalid-email') showErr(authError, 'البريد الإلكتروني غير صالح');
+        else if (err.code === 'auth/too-many-requests') showErr(authError, 'محاولات كثيرة، انتظر قليلاً ثم حاول');
+        else showErr(authError, 'حدث خطأ، حاول مرة أخرى');
+      }
     } else {
       const name = authName.value.trim();
       const email = authEmail.value.trim();
@@ -2115,26 +2070,65 @@
       if (!pass) { showErr(authError, 'كلمة المرور مطلوبة'); authPass.focus(); return; }
       if (pass.length < 6) { showErr(authError, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
       if (pass !== pass2) { showErr(authError, 'كلمتا المرور غير متطابقتين'); return; }
-      const users = getUsers();
-      if (users[email]) { showErr(authError, 'هذا البريد الإلكتروني مسجل بالفعل، سجّل الدخول'); return; }
-      regPendingData = { username: name, email: email, password: pass, joined: new Date().toISOString() };
-      regCode = generateCode();
-      regCodeExpires = Date.now() + 10 * 60 * 1000;
-      authFormFields.style.display = 'none';
-      authSubmitBtn.style.display = 'none';
-      authDivider.style.display = 'none';
-      switchMode.style.display = 'none';
-      if (registerVerify) {
+      authSubmitBtn.disabled = true;
+      authSubmitBtn.textContent = 'جاري إنشاء الحساب...';
+      try {
+        const cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
+        await cred.user.updateProfile({ displayName: name });
+        await cred.user.sendEmailVerification();
+        authFormFields.style.display = 'none';
+        authSubmitBtn.style.display = 'none';
+        authDivider.style.display = 'none';
+        switchMode.style.display = 'none';
+        authTitle.textContent = 'تحقق من بريدك';
+        authSubtitle.textContent = 'تم إرسال رمز التحقق إلى: ' + email;
         registerVerify.style.display = '';
-        registerVerifyMsg.textContent = 'تم إرسال رمز التحقق إلى: ' + email;
-        registerVerifyCode.value = '';
+        registerVerifyMsg.textContent = 'افتح بريدك الإلكتروني واضغط على رابط التحقق، ثم اضغط "تحقق من الحساب"';
         hideErr(registerVerifyError);
+        notify('تم إنشاء الحساب', 'تحقق من بريدك: ' + email);
+      } catch(err) {
+        authSubmitBtn.disabled = false;
+        authSubmitBtn.textContent = 'إنشاء حساب';
+        if (err.code === 'auth/email-already-in-use') showErr(authError, 'هذا البريد الإلكتروني مسجل بالفعل');
+        else if (err.code === 'auth/invalid-email') showErr(authError, 'البريد الإلكتروني غير صالح');
+        else if (err.code === 'auth/weak-password') showErr(authError, 'كلمة المرور ضعيفة جداً');
+        else showErr(authError, 'حدث خطأ، حاول مرة أخرى');
       }
-      console.log('=== REGISTER CODE ===', regCode, '===');
-      notify('تم إرسال الرمز', 'رمز التحقق: ' + regCode);
-      registerVerifyCode.focus();
     }
   });
+
+  // Firebase auth state listener + verify button
+  fbAuth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = { email: user.email, username: user.displayName || user.email.split('@')[0], emailVerified: user.emailVerified };
+    } else {
+      currentUser = null;
+    }
+    updateNavForUser();
+  });
+
+  // Verify button in register-verify step
+  if (registerVerify) {
+    var regCheckBtn = document.createElement('button');
+    regCheckBtn.className = 'auth-btn';
+    regCheckBtn.textContent = 'تحقق من الحساب';
+    regCheckBtn.style.marginTop = '10px';
+    regCheckBtn.style.background = '#059669';
+    registerVerify.appendChild(regCheckBtn);
+
+    regCheckBtn.addEventListener('click', async () => {
+      hideErr(registerVerifyError);
+      if (!fbAuth.currentUser) { showErr(registerVerifyError, 'حدث خطأ، أعد تسجيل الدخول'); return; }
+      await fbAuth.currentUser.reload();
+      if (fbAuth.currentUser.emailVerified) {
+        closeAuth();
+        playPurchaseSound();
+        notify('مرحباً ' + (fbAuth.currentUser.displayName || '') + '!', 'تم تفعيل حسابك بنجاح');
+      } else {
+        showErr(registerVerifyError, 'لم يتم التحقق بعد! تحقق من بريدك واضغط على الرابط');
+      }
+    });
+  }
 
   [authEmail, authPass, authPass2, authName].forEach(el => {
     el.addEventListener('keydown', e => { if (e.key === 'Enter') authSubmitBtn.click(); });
@@ -2146,16 +2140,13 @@
 
   function updateNavForUser() {
     const userEl = document.getElementById('auth-user');
-    const startBtn = document.querySelector('.hero-buttons .btn') || document.querySelector('.btn-primary');
     if (currentUser) {
       if (userEl) {
         userEl.innerHTML = '<i class="fas fa-user"></i> ' + currentUser.username;
         userEl.style.whiteSpace = 'nowrap';
         userEl.onclick = () => {
           if (confirm('هل تريد تسجيل الخروج؟')) {
-            clearSession();
-            currentUser = null;
-            updateNavForUser();
+            fbAuth.signOut();
             notify('تم تسجيل الخروج', 'نتمنى رؤيتك قريباً');
           }
         };
@@ -2167,20 +2158,6 @@
       }
     }
   }
-
-  function checkSession() {
-    const session = getSession();
-    if (session) {
-      const users = getUsers();
-      if (users[session.email] && users[session.email].password === session.password) {
-        currentUser = session;
-      } else {
-        clearSession();
-      }
-    }
-    updateNavForUser();
-  }
-  checkSession();
 
   // Link buttons to auth modal
   document.querySelectorAll('a[href="#products"]').forEach(el => {
