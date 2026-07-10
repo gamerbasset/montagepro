@@ -358,6 +358,54 @@
       box-shadow: 0 8px 24px rgba(5,150,105,0.4);
       transition: all 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
     }
+    .cart-dropdown {
+      position: absolute; top: calc(100% + 10px); left: 0; width: 340px;
+      background: #0d0d1a; border: 1px solid #1a1a30; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 9999;
+      opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.96);
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+      overflow: hidden;
+    }
+    .cart-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+    .cart-dropdown-header {
+      padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cart-dropdown-header h4 { color: #fff; font-size: 15px; font-weight: 700; }
+    .cart-dropdown-header .close-cart { background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 4px; transition: 0.2s; }
+    .cart-dropdown-header .close-cart:hover { color: #fff; }
+    .cart-dropdown-items { max-height: 280px; overflow-y: auto; padding: 8px 0; }
+    .cart-dropdown-items::-webkit-scrollbar { width: 4px; }
+    .cart-dropdown-items::-webkit-scrollbar-thumb { background: #1a1a30; border-radius: 4px; }
+    .cart-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+      transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item:hover { background: rgba(255,255,255,0.02); }
+    .cart-item img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: #0a0a14; }
+    .cart-item-info { flex: 1; }
+    .cart-item-info .name { color: #fff; font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .cart-item-info .price { color: #059669; font-size: 14px; font-weight: 700; }
+    .cart-item-remove { background: none; border: none; color: #555; cursor: pointer; font-size: 12px; padding: 6px; border-radius: 8px; transition: all 0.2s; }
+    .cart-item-remove:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .cart-dropdown-footer {
+      padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+    }
+    .cart-total { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .cart-total span:first-child { color: #888; font-size: 14px; }
+    .cart-total span:last-child { color: #fff; font-size: 20px; font-weight: 900; }
+    .cart-checkout-btn {
+      width: 100%; padding: 12px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.3s; font-family: 'Cairo', sans-serif;
+    }
+    .cart-checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(5,150,105,0.4); }
+    .cart-empty { padding: 40px 20px; text-align: center; color: #555; font-size: 14px; }
+    .cart-empty i { font-size: 32px; margin-bottom: 12px; display: block; color: #333; }
+    .cart-header-btn { position: relative; }
     #music-toggle {
       position: fixed; bottom: 24px; right: 24px; z-index: 99999;
       width: 44px; height: 44px; border-radius: 50%;
@@ -517,10 +565,31 @@
       <a href="#testimonials" data-i18n="nav_testimonials">التقييمات</a>
     </nav>
     <div style="display:flex;align-items:center;gap:10px">
-      <button class="cart-header-btn" id="cart-header-btn" title="السلة">
-        <i class="fas fa-bag-shopping"></i>
-        <span class="cart-count" id="cart-count">0</span>
-      </button>
+      <div style="position:relative">
+        <button class="cart-header-btn" id="cart-header-btn" title="السلة">
+          <i class="fas fa-bag-shopping"></i>
+          <span class="cart-count" id="cart-count">0</span>
+        </button>
+        <div class="cart-dropdown" id="cart-dropdown">
+          <div class="cart-dropdown-header">
+            <h4><i class="fas fa-bag-shopping" style="margin-left:8px;color:#059669"></i>سلة المشتريات</h4>
+            <button class="close-cart" id="close-cart"><i class="fas fa-xmark"></i></button>
+          </div>
+          <div class="cart-dropdown-items" id="cart-dropdown-items">
+            <div class="cart-empty" id="cart-empty">
+              <i class="fas fa-bag-shopping"></i>
+              السلة فارغة
+            </div>
+          </div>
+          <div class="cart-dropdown-footer" id="cart-dropdown-footer" style="display:none">
+            <div class="cart-total">
+              <span>الإجمالي</span>
+              <span id="cart-total-price">$0</span>
+            </div>
+            <button class="cart-checkout-btn"><i class="fas fa-lock" style="margin-left:6px"></i>إتمام الشراء</button>
+          </div>
+        </div>
+      </div>
       <button class="lang-btn" id="lang-btn" title="الإعدادات"><i class="fas fa-gear"></i></button>
       <a href="#products" class="btn btn-primary" data-i18n="header_cta">تسوق الآن</a>
     </div>
@@ -1264,13 +1333,83 @@
 
   // ===== CART FUNCTIONALITY =====
   let cartCount = 0;
+  let cartItems = [];
   const cartCountEl = document.getElementById('cart-count');
   const cartHeaderBtn = document.getElementById('cart-header-btn');
-  const productImages = ['GOLD.png', 'IRON.png', 'Mon.png'];
+  const cartDropdown = document.getElementById('cart-dropdown');
+  const cartDropdownItems = document.getElementById('cart-dropdown-items');
+  const cartDropdownFooter = document.getElementById('cart-dropdown-footer');
+  const cartTotalPrice = document.getElementById('cart-total-price');
+  const cartEmpty = document.getElementById('cart-empty');
+  const closeCart = document.getElementById('close-cart');
 
-  // Hover sounds on cards and interactive elements
-  document.querySelectorAll('.product-card, .testimonial-card, .feature-item, .btn').forEach(el => {
-    el.addEventListener('mouseenter', playHoverSound);
+  const products = [
+    { name: 'الباقة الذهبية', nameEn: 'Gold Bundle', price: 149, img: 'GOLD.png' },
+    { name: 'الباقة الفضية', nameEn: 'Silver Bundle', price: 79, img: 'IRON.png' },
+    { name: 'باقة المونتاج', nameEn: 'Montage Pack', price: 49, img: 'Mon.png' }
+  ];
+
+  function renderCart() {
+    cartDropdownItems.innerHTML = '';
+    if (cartItems.length === 0) {
+      cartDropdownItems.innerHTML = '<div class="cart-empty"><i class="fas fa-bag-shopping"></i>السلة فارغة</div>';
+      cartDropdownFooter.style.display = 'none';
+      cartCountEl.classList.remove('show');
+      return;
+    }
+    cartDropdownFooter.style.display = '';
+    let total = 0;
+    cartItems.forEach((item, idx) => {
+      total += item.price;
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      el.style.opacity = '0'; el.style.transform = 'translateX(20px)';
+      el.innerHTML = `
+        <img src="${item.img}" alt="${item.name}">
+        <div class="cart-item-info">
+          <div class="name">${item.name}</div>
+          <div class="price">$${item.price}</div>
+        </div>
+        <button class="cart-item-remove" data-idx="${idx}" title="إزالة"><i class="fas fa-trash-can"></i></button>
+      `;
+      cartDropdownItems.appendChild(el);
+      requestAnimationFrame(() => {
+        el.style.transition = 'all 0.3s ease';
+        el.style.opacity = '1'; el.style.transform = 'translateX(0)';
+      });
+    });
+    cartTotalPrice.textContent = '$' + total;
+    cartCountEl.textContent = cartItems.length;
+    cartCountEl.classList.add('show');
+    // Remove button handlers
+    cartDropdownItems.querySelectorAll('.cart-item-remove').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx);
+        const removed = cartItems.splice(idx, 1)[0];
+        cartCount = cartItems.length;
+        // Un-add the product card button
+        document.querySelectorAll('.product-card').forEach(card => {
+          const h3 = card.querySelector('h3');
+          if (h3 && (h3.textContent === removed.name || h3.dataset.i18n === removed.i18nKey)) {
+            const cb = card.querySelector('.cart-btn');
+            if (cb) { cb.classList.remove('added'); cb.innerHTML = '<i class="fas fa-bag-shopping"></i>'; }
+          }
+        });
+        renderCart();
+      });
+    });
+  }
+
+  // Toggle dropdown
+  cartHeaderBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cartDropdown.classList.toggle('open');
+  });
+  closeCart.addEventListener('click', () => cartDropdown.classList.remove('open'));
+  document.addEventListener('click', (e) => {
+    if (!cartDropdown.contains(e.target) && !cartHeaderBtn.contains(e.target)) {
+      cartDropdown.classList.remove('open');
+    }
   });
 
   document.querySelectorAll('.product-card').forEach((card, i) => {
@@ -1289,8 +1428,10 @@
       this.classList.add('added');
       this.innerHTML = '<i class="fas fa-check"></i>';
 
-      // Increment count
-      cartCount++;
+      // Add to cart items
+      const prod = products[i];
+      cartItems.push({ name: prod.name, nameEn: prod.nameEn, price: prod.price, img: prod.img, i18nKey: card.querySelector('h3')?.dataset.i18n });
+      cartCount = cartItems.length;
       cartCountEl.textContent = cartCount;
       cartCountEl.classList.add('show');
       cartCountEl.classList.remove('bump');
@@ -1298,12 +1439,11 @@
       cartCountEl.classList.add('bump');
 
       // Create flying image
-      const cardRect = card.getBoundingClientRect();
       const previewRect = preview.getBoundingClientRect();
       const cartRect = cartHeaderBtn.getBoundingClientRect();
 
       const flyImg = document.createElement('img');
-      flyImg.src = productImages[i];
+      flyImg.src = prod.img;
       flyImg.className = 'cart-fly-img';
       flyImg.style.left = (previewRect.left + previewRect.width / 2 - 30) + 'px';
       flyImg.style.top = (previewRect.top + previewRect.height / 2 - 30) + 'px';
@@ -1311,7 +1451,6 @@
       flyImg.style.transform = 'scale(1) rotate(0deg)';
       document.body.appendChild(flyImg);
 
-      // Trigger animation
       requestAnimationFrame(() => {
         flyImg.style.left = (cartRect.left + cartRect.width / 2 - 30) + 'px';
         flyImg.style.top = (cartRect.top + cartRect.height / 2 - 30) + 'px';
@@ -1319,9 +1458,16 @@
         flyImg.style.transform = 'scale(0.2) rotate(20deg)';
       });
 
-      // Remove flying image after animation
       setTimeout(() => flyImg.remove(), 750);
+
+      // Update cart dropdown
+      renderCart();
     });
+  });
+
+  // Hover sounds on cards and interactive elements
+  document.querySelectorAll('.product-card, .testimonial-card, .feature-item, .btn').forEach(el => {
+    el.addEventListener('mouseenter', playHoverSound);
   });
 </script>
 </body>
