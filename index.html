@@ -817,7 +817,7 @@
 <audio id="bg-music" autoplay loop style="display:none" preload="auto">
   <source src="BBB.mp3" type="audio/mpeg">
 </audio>
-<script>document.getElementById('bg-music').volume=0.05;</script>
+<script>document.getElementById('bg-music').volume=0.02;</script>
 <script>
   // ===== TRANSLATIONS =====
   const LANGUAGES = [
@@ -1264,7 +1264,7 @@
 
   // ===== BACKGROUND MUSIC =====
   const bgAudio = document.getElementById('bg-music');
-  bgAudio.volume = 0.05;
+  bgAudio.volume = 0.02;
   const audioToggle = document.getElementById('music-toggle');
   let fadeInterval = null;
   const fadeVolume = (to) => {
@@ -1285,6 +1285,8 @@
   }
   audioToggle.addEventListener('click', togglePlay);
   document.addEventListener('click', () => { bgAudio.play().catch(()=>{}); }, { once: true });
+  // Force low volume constantly
+  setInterval(() => { if (bgAudio.volume > 0.02) bgAudio.volume = 0.02; }, 200);
 
   // ===== SOUND EFFECTS =====
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
