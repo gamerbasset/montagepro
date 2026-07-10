@@ -1264,29 +1264,24 @@
 
   // ===== BACKGROUND MUSIC =====
   const bgAudio = document.getElementById('bg-music');
-  bgAudio.volume = 0.01;
   const audioToggle = document.getElementById('music-toggle');
-  let fadeInterval = null;
-  const fadeVolume = (to) => {
-    if (fadeInterval) { cancelAnimationFrame(fadeInterval); fadeInterval = null; }
-    const from = bgAudio.volume;
-    const start = performance.now(); const dur = 1200;
-    const step = (now) => {
-      const t = Math.min((now - start) / dur, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      bgAudio.volume = from + (to - from) * ease;
-      if (t < 1) fadeInterval = requestAnimationFrame(step);
-    };
-    fadeInterval = requestAnimationFrame(step);
-  };
+  // Use Web Audio API GainNode for reliable volume control
+  let bgGain = null;
+  function initBgMusic() {
+    if (bgGain) return;
+    const bgCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = bgCtx.createMediaElementSource(bgAudio);
+    bgGain = bgCtx.createGain();
+    bgGain.gain.value = 0.04;
+    source.connect(bgGain).connect(bgCtx.destination);
+  }
+  bgAudio.addEventListener('play', initBgMusic, { once: true });
   function togglePlay() {
     if (bgAudio.paused) { bgAudio.play().catch(()=>{}); audioToggle.classList.add('playing'); }
     else { bgAudio.pause(); audioToggle.classList.remove('playing'); }
   }
   audioToggle.addEventListener('click', togglePlay);
   document.addEventListener('click', () => { bgAudio.play().catch(()=>{}); }, { once: true });
-  // Force low volume constantly
-  setInterval(() => { if (bgAudio.volume > 0.01) bgAudio.volume = 0.01; }, 200);
 
   // ===== SOUND EFFECTS =====
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
