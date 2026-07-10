@@ -2134,8 +2134,17 @@
     el.addEventListener('keydown', e => { if (e.key === 'Enter') authSubmitBtn.click(); });
   });
 
-  document.getElementById('google-btn').addEventListener('click', () => {
-    notify('قريباً', 'تسجيل الدخول بحساب Google سيكون متاحاً قريباً');
+  document.getElementById('google-btn').addEventListener('click', async () => {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await fbAuth.signInWithPopup(provider);
+      closeAuth();
+      playPurchaseSound();
+    } catch(err) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        notify('خطأ', 'حدث خطأ في تسجيل الدخول بـ Google');
+      }
+    }
   });
 
   function updateNavForUser() {
