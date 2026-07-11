@@ -573,6 +573,7 @@
       header .container { height: 56px; }
       .logo { font-size: 18px; }
       nav { display: none; }
+      .menu-toggle { display: flex !important; }
       .hero { min-height: auto; padding: 80px 0 40px; }
       .hero .container { gap: 30px; padding-top: 70px; }
       .hero-text h1 { font-size: 28px; line-height: 1.2; }
@@ -740,6 +741,37 @@
     }
     .auth-box .switch-mode span { color: #059669; cursor: pointer; font-weight: 700; transition: color 0.2s; }
     .auth-box .switch-mode span:hover { color: #10b981; text-decoration: underline; }
+    .menu-toggle {
+      display: none; background: none; border: 1px solid rgba(255,255,255,0.08); color: #ccc;
+      width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+      align-items: center; justify-content: center; font-size: 16px;
+      transition: all 0.2s;
+    }
+    .menu-toggle:hover { border-color: rgba(5,150,105,0.3); color: #059669; }
+    .mobile-nav {
+      position: fixed; inset: 0; z-index: 10001;
+      background: rgba(7,7,13,0.95); backdrop-filter: blur(20px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .mobile-nav.open { opacity: 1; pointer-events: all; }
+    .mobile-nav a {
+      color: #e0e0e0; font-size: 20px; font-weight: 600;
+      padding: 14px 40px; border-radius: 12px;
+      transition: all 0.2s;
+    }
+    .mobile-nav a:hover, .mobile-nav a:active {
+      background: rgba(5,150,105,0.12); color: #059669;
+    }
+    .mobile-nav .mobile-nav-close {
+      position: absolute; top: 20px; left: 20px;
+      background: none; border: 1px solid rgba(255,255,255,0.08);
+      color: #888; width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; transition: all 0.2s;
+    }
+    .mobile-nav .mobile-nav-close:hover { border-color: rgba(5,150,105,0.3); color: #059669; }
   </style>
 </head>
 <body>
@@ -757,6 +789,7 @@
       <a href="#testimonials" data-i18n="nav_testimonials">التقييمات</a>
     </nav>
     <div style="display:flex;align-items:center;gap:10px">
+      <button class="menu-toggle" id="menu-toggle"><i class="fas fa-bars"></i></button>
       <div style="position:relative">
         <button class="cart-header-btn" id="cart-header-btn" title="السلة">
           <i class="fas fa-bag-shopping"></i>
@@ -773,6 +806,14 @@
     </div>
   </div>
 </header>
+
+<div class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-close" id="mobile-nav-close"><i class="fas fa-xmark"></i></button>
+  <a href="#products" data-i18n="nav_products">المنتجات</a>
+  <a href="#features" data-i18n="nav_features">المميزات</a>
+  <a href="#showreel" data-i18n="nav_showreel">عرض</a>
+  <a href="#testimonials" data-i18n="nav_testimonials">التقييمات</a>
+</div>
 
 <div class="cart-dropdown" id="cart-dropdown">
   <div class="cart-dropdown-header">
@@ -1351,6 +1392,16 @@
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
   document.querySelectorAll('.reveal, .reveal-scale').forEach(el => observer.observe(el));
+
+  // ===== MOBILE NAV =====
+  const menuToggle = document.getElementById('menu-toggle');
+  const mobileNav = document.getElementById('mobile-nav');
+  const mobileNavClose = document.getElementById('mobile-nav-close');
+  menuToggle.addEventListener('click', () => mobileNav.classList.add('open'));
+  mobileNavClose.addEventListener('click', () => mobileNav.classList.remove('open'));
+  mobileNav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => mobileNav.classList.remove('open'));
+  });
 
   // ===== HEADER SCROLL =====
   let lastScrollY = 0;
