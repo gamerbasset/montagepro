@@ -1092,6 +1092,7 @@
 <script>document.getElementById('bg-music').volume=0.01;</script>
 <script>
   // ===== FIREBASE INIT =====
+  const isMobile = window.innerWidth <= 768;
   const firebaseConfig = {
     apiKey: "AIzaSyBmvInEWn00lhYshbmZfUcu3ubM3GNydxI",
     authDomain: "basset-cdf80.firebaseapp.com",
@@ -1307,8 +1308,6 @@
   smokeCanvas.width = window.innerWidth;
   smokeCanvas.height = window.innerHeight;
   window.addEventListener('resize', () => { smokeCanvas.width = window.innerWidth; smokeCanvas.height = window.innerHeight; });
-
-  const isMobile = window.innerWidth <= 768;
 
   const smokeParticles = [];
   function createSmokePreset() {
