@@ -2167,15 +2167,13 @@
           }
         };
       }
-      if (headerBtn) {
-        headerBtn.textContent = currentUser.username;
-        headerBtn.onclick = (e) => { e.preventDefault(); };
-      }
+      if (headerBtn) headerBtn.style.display = 'none';
     } else {
       if (userEl) {
         userEl.style.display = 'none';
       }
       if (headerBtn) {
+        headerBtn.style.display = '';
         headerBtn.textContent = langData[currentLang]['header_cta'] || 'تسوق الآن';
         headerBtn.onclick = null;
       }
