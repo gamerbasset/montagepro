@@ -1012,6 +1012,24 @@
     }
     .auth-box .input-group input:focus + i,
     .auth-box .input-group input:focus ~ i { color: #059669; }
+    .auth-box .phone-row select {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .auth-box .phone-row select:focus {
+      border-color: #059669; background: rgba(5,150,105,0.04);
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+    }
+    .auth-box .phone-row select option {
+      background: #0d0d1a; color: #fff; padding: 8px;
+    }
+    #phone-error {
+      animation: shake 0.3s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
     .auth-box .forgot-link {
       display: block; text-align: left; color: #059669; font-size: 12px;
       margin-bottom: 20px; cursor: pointer; transition: color 0.2s;
@@ -1392,10 +1410,24 @@
       </div>
       <h2 style="font-size:20px;text-align:center">أكمل طلبك</h2>
       <p class="auth-subtitle" style="text-align:center;font-size:13px">أدخل رقم هاتفك للتواصل معك</p>
-      <div class="input-group" style="margin-top:16px">
-        <input type="tel" id="phone-input" placeholder="0555 55 55 55" autocomplete="tel" style="text-align:center;font-size:16px">
-        <i class="fas fa-phone"></i>
+      <div class="phone-row" style="margin-top:16px;display:flex;gap:8px;align-items:stretch">
+        <select id="country-code" style="min-width:110px;padding:13px 10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:14px;font-family:'Cairo',sans-serif;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;text-align:center;transition:all 0.3s">
+          <option value="+213" selected style="background:#0d0d1a;color:#fff">🇩🇿 +213</option>
+          <option value="+212" style="background:#0d0d1a;color:#fff">🇲🇦 +212</option>
+          <option value="+216" style="background:#0d0d1a;color:#fff">🇹🇳 +216</option>
+          <option value="+218" style="background:#0d0d1a;color:#fff">🇱🇾 +218</option>
+          <option value="+20" style="background:#0d0d1a;color:#fff">🇪🇬 +20</option>
+          <option value="+966" style="background:#0d0d1a;color:#fff">🇸🇦 +966</option>
+          <option value="+971" style="background:#0d0d1a;color:#fff">🇦🇪 +971</option>
+          <option value="+33" style="background:#0d0d1a;color:#fff">🇫🇷 +33</option>
+          <option value="+1" style="background:#0d0d1a;color:#fff">🇺🇸 +1</option>
+        </select>
+        <div class="input-group" style="flex:1;margin-bottom:0">
+          <input type="tel" id="phone-input" placeholder="0555 55 55 55" autocomplete="tel" style="text-align:center;font-size:16px">
+          <i class="fas fa-phone"></i>
+        </div>
       </div>
+      <div id="phone-error" style="display:none;color:#ef4444;font-size:12px;text-align:center;margin-top:8px"></div>
       <button class="auth-btn" id="phone-submit" style="margin-top:12px;width:100%">تأكيد الطلب</button>
     </div>
 </div>
@@ -2506,17 +2538,49 @@
     }
   });
 
+  const countryLengths = { '+213': [9,10], '+212': [9], '+216': [8], '+218': [9,10], '+20': [10], '+966': [9], '+971': [9], '+33': [9], '+1': [10] };
+  const countryFormats = { '+213': '0XXX XX XX XX', '+212': '0XX XX XX XX', '+216': 'XX XXX XXX', '+218': '0XX XXX XXXX', '+20': '0XX XXX XXXX', '+966': '0XX XXX XXXX', '+971': '0XX XXX XXXX', '+33': '0X XX XX XX XX', '+1': '(XXX) XXX-XXXX' };
+  const countrySelect = document.getElementById('country-code');
+  const phoneInput = document.getElementById('phone-input');
+  const phoneError = document.getElementById('phone-error');
+
+  function updatePlaceholder() {
+    const code = countrySelect.value;
+    phoneInput.placeholder = countryFormats[code] || '0555 55 55 55';
+  }
+  countrySelect.addEventListener('change', updatePlaceholder);
+  updatePlaceholder();
+
+  function validatePhone(raw, code) {
+    const digits = raw.replace(/\D/g, '');
+    if (!digits) return 'أدخل رقم الهاتف';
+    const minLen = countryLengths[code] ? countryLengths[code][0] : 8;
+    const maxLen = countryLengths[code] ? countryLengths[code][1] || minLen : 12;
+    if (digits.length < minLen || digits.length > maxLen) return 'الرقم غير صحيح (يجب أن يكون بين ' + minLen + ' و ' + maxLen + ' أرقام)';
+    return '';
+  }
+
+  function showError(msg) {
+    if (!msg) { phoneError.style.display = 'none'; return; }
+    phoneError.textContent = msg;
+    phoneError.style.display = 'block';
+    phoneInput.style.borderColor = '#ef4444';
+    setTimeout(() => { phoneInput.style.borderColor = ''; }, 2000);
+  }
+
   document.getElementById('phone-submit').addEventListener('click', () => {
-    const phone = document.getElementById('phone-input').value.trim();
-    if (!phone) { document.getElementById('phone-input').style.borderColor = '#ef4444'; setTimeout(() => { document.getElementById('phone-input').style.borderColor = ''; }, 2000); return; }
-    if (phone.length < 8) { document.getElementById('phone-input').style.borderColor = '#ef4444'; setTimeout(() => { document.getElementById('phone-input').style.borderColor = ''; }, 2000); return; }
+    const code = countrySelect.value;
+    const raw = phoneInput.value.trim();
+    const err = validatePhone(raw, code);
+    if (err) { showError(err); return; }
+    const fullPhone = code + raw.replace(/^0+/, '');
     document.getElementById('phone-overlay').classList.remove('open');
     document.getElementById('phone-overlay').style.display = 'none';
     const total = cartItems.reduce((s, i) => s + i.price, 0);
     db.collection('orders').add({
       name: currentUser.username,
       email: currentUser.email,
-      phone: phone,
+      phone: fullPhone,
       products: cartItems.map(i => ({ name: i.name, price: i.price })),
       total: total,
       date: firebase.firestore.FieldValue.serverTimestamp()
@@ -2528,12 +2592,12 @@
       document.getElementById('cart-dropdown-footer').style.display = 'none';
       document.getElementById('cart-dropdown').classList.remove('open');
       playNotifySound();
-      notify('تم الطلب بنجاح!', 'سيتم التواصل معك على ' + phone);
+      notify('تم الطلب بنجاح!', 'سيتم التواصل معك على ' + fullPhone);
     }).catch(() => {
       notify('خطأ', 'حدث خطأ في حفظ الطلب');
     });
   });
-  document.getElementById('phone-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('phone-submit').click(); });
+  phoneInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('phone-submit').click(); });
 </script>
 </body>
 </html>
