@@ -2569,7 +2569,7 @@
     if (digits.length < minLen || digits.length > maxLen) return 'الرقم يجب أن يكون ' + minLen + (minLen !== maxLen ? '-' + maxLen : '') + ' أرقام';
     const localNum = digits.startsWith('0') ? digits : '0' + digits;
     const matches = c.patterns.some(p => p.test(localNum));
-    if (!matches) return 'رقم غير صالح لـ ' + c.name + ' — ' + c.tip;
+    if (!matches) return 'رقم غير صالح لـ ' + c.name;
     return '';
   }
 
