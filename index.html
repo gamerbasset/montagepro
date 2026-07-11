@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -1007,6 +1008,7 @@
   };
   firebase.initializeApp(firebaseConfig);
   const fbAuth = firebase.auth();
+  const db = firebase.firestore();
 
   // ===== TRANSLATIONS =====
   const LANGUAGES = [
@@ -1846,7 +1848,34 @@
     el.addEventListener('click', e => { e.preventDefault(); if (currentUser) return; openAuth(); });
   });
   document.querySelectorAll('.cart-checkout-btn').forEach(el => {
-    el.addEventListener('click', e => { e.preventDefault(); if (!currentUser) { openAuth(); return; } notify('شكراً!', 'سيتم التواصل معك قريباً لإتمام الطلب'); });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      if (!currentUser) { openAuth(); return; }
+      if (cartItems.length === 0) { notify('السلة فارغة', 'أضف منتجات أولاً'); return; }
+      const phone = prompt('أدخل رقم هاتفك للتواصل:');
+      if (!phone) return;
+      const total = cartItems.reduce((s, i) => s + i.price, 0);
+      const products = cartItems.map(i => i.name + ' - ' + i.price + ' DA').join('\n');
+      db.collection('orders').add({
+        name: currentUser.username,
+        email: currentUser.email,
+        phone: phone,
+        products: cartItems.map(i => ({ name: i.name, price: i.price })),
+        total: total,
+        date: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        cartItems = [];
+        cartCount = 0;
+        document.getElementById('cart-count').textContent = '0';
+        document.getElementById('cart-dropdown-items').innerHTML = '<div class="cart-empty"><i class="fas fa-bag-shopping"></i>السلة فارغة</div>';
+        document.getElementById('cart-dropdown-footer').style.display = 'none';
+        document.getElementById('cart-dropdown').classList.remove('open');
+        playPurchaseSound();
+        notify('تم الطلب بنجاح!', 'سيتم التواصل معك قريباً على ' + phone);
+      }).catch(() => {
+        notify('خطأ', 'حدث خطأ في حفظ الطلب');
+      });
+    });
   });
 </script>
 </body>
