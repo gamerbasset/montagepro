@@ -1652,78 +1652,126 @@
   notifyStyle.textContent = '@keyframes notifyIn { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }';
   document.head.appendChild(notifyStyle);
 
-  // ===== SOUND EFFECTS =====
+  // ===== SOUND EFFECTS (Apple-style) =====
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   function playPurchaseSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    // Pleasant ascending chime — 3 notes
-    [523.25, 659.25, 783.99].forEach((freq, i) => {
+    // Apple-style success: warm ascending chord + shimmer
+    const notes = [
+      { freq: 523.25, time: 0,    dur: 0.5 },
+      { freq: 659.25, time: 0.08, dur: 0.45 },
+      { freq: 783.99, time: 0.16, dur: 0.4 },
+      { freq: 1046.5, time: 0.24, dur: 0.35 },
+    ];
+    notes.forEach(n => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now + i * 0.1);
-      gain.gain.setValueAtTime(0.18, now + i * 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+      osc.frequency.setValueAtTime(n.freq, now + n.time);
+      // Soft attack, warm sustain, gentle release
+      gain.gain.setValueAtTime(0, now + n.time);
+      gain.gain.linearRampToValueAtTime(0.12, now + n.time + 0.03);
+      gain.gain.setValueAtTime(0.12, now + n.time + n.dur * 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.dur);
       osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now + i * 0.1);
-      osc.stop(now + i * 0.1 + 0.4);
+      osc.start(now + n.time);
+      osc.stop(now + n.time + n.dur);
     });
-    // Soft pop at the end
-    const popOsc = audioCtx.createOscillator();
-    const popGain = audioCtx.createGain();
-    popOsc.type = 'sine';
-    popOsc.frequency.setValueAtTime(1200, now + 0.32);
-    popOsc.frequency.exponentialRampToValueAtTime(400, now + 0.45);
-    popGain.gain.setValueAtTime(0.12, now + 0.32);
-    popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    popOsc.connect(popGain).connect(audioCtx.destination);
-    popOsc.start(now + 0.32);
-    popOsc.stop(now + 0.5);
+    // Shimmer overtone — soft high sparkle
+    const shimmer = audioCtx.createOscillator();
+    const shimmerGain = audioCtx.createGain();
+    shimmer.type = 'sine';
+    shimmer.frequency.setValueAtTime(2093, now + 0.2);
+    shimmerGain.gain.setValueAtTime(0, now + 0.2);
+    shimmerGain.gain.linearRampToValueAtTime(0.04, now + 0.22);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    shimmer.connect(shimmerGain).connect(audioCtx.destination);
+    shimmer.start(now + 0.2);
+    shimmer.stop(now + 0.6);
+    // Soft click at end
+    const click = audioCtx.createOscillator();
+    const clickGain = audioCtx.createGain();
+    click.type = 'sine';
+    click.frequency.setValueAtTime(1568, now + 0.28);
+    click.frequency.exponentialRampToValueAtTime(800, now + 0.38);
+    clickGain.gain.setValueAtTime(0.06, now + 0.28);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    click.connect(clickGain).connect(audioCtx.destination);
+    click.start(now + 0.28);
+    click.stop(now + 0.38);
   }
 
   function playHoverSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
+    // Apple-style subtle "tick" — like iOS keyboard tap
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
-    gain.gain.setValueAtTime(0.06, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.015);
+    osc.frequency.exponentialRampToValueAtTime(1600, now + 0.06);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.035, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.06);
+    // Soft overtone
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(3200, now);
+    gain2.gain.setValueAtTime(0, now);
+    gain2.gain.linearRampToValueAtTime(0.012, now + 0.004);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc2.connect(gain2).connect(audioCtx.destination);
+    osc2.start(now);
+    osc2.stop(now + 0.04);
   }
 
   function playRemoveSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    // Descending dissonant buzz — feels wrong
-    [400, 300, 180].forEach((freq, i) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, now + i * 0.08);
-      gain.gain.setValueAtTime(0.15, now + i * 0.08);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now + i * 0.08);
-      osc.stop(now + i * 0.08 + 0.2);
-    });
-    // Low thud at the end
-    const thud = audioCtx.createOscillator();
-    const thudGain = audioCtx.createGain();
-    thud.type = 'sine';
-    thud.frequency.setValueAtTime(80, now + 0.25);
-    thud.frequency.exponentialRampToValueAtTime(40, now + 0.45);
-    thudGain.gain.setValueAtTime(0.2, now + 0.25);
-    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-    thud.connect(thudGain).connect(audioCtx.destination);
-    thud.start(now + 0.25);
-    thud.stop(now + 0.45);
+    // Apple-style gentle "whoosh" down — like iOS delete
+    // Main tone — smooth descending
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.15);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+    // Soft echo
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(660, now + 0.06);
+    osc2.frequency.exponentialRampToValueAtTime(330, now + 0.22);
+    gain2.gain.setValueAtTime(0, now + 0.06);
+    gain2.gain.linearRampToValueAtTime(0.06, now + 0.07);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    osc2.connect(gain2).connect(audioCtx.destination);
+    osc2.start(now + 0.06);
+    osc2.stop(now + 0.22);
+    // Soft low pop
+    const pop = audioCtx.createOscillator();
+    const popGain = audioCtx.createGain();
+    pop.type = 'sine';
+    pop.frequency.setValueAtTime(220, now + 0.12);
+    pop.frequency.exponentialRampToValueAtTime(110, now + 0.25);
+    popGain.gain.setValueAtTime(0, now + 0.12);
+    popGain.gain.linearRampToValueAtTime(0.08, now + 0.13);
+    popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    pop.connect(popGain).connect(audioCtx.destination);
+    pop.start(now + 0.12);
+    pop.stop(now + 0.25);
   }
 
   // ===== CART FUNCTIONALITY =====
