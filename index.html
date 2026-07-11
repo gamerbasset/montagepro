@@ -384,7 +384,7 @@
       transition: left 0.7s cubic-bezier(0.25,0.46,0.45,0.94), top 0.7s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.7s, transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
     }
     .cart-dropdown {
-      position: fixed; top: 80px; right: 20px; width: 340px;
+      position: fixed; top: 80px; width: 340px;
       background: #0d0d1a; border: 1px solid #1a1a30; border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 99999;
       opacity: 0; pointer-events: none; transform: translateY(-10px) scale(0.96);
@@ -1146,7 +1146,7 @@
       list.appendChild(btn);
     });
     document.getElementById('lang-btn').addEventListener('click', () => document.getElementById('lang-panel').classList.add('open'));
-    document.getElementById('lang-panel-close').addEventListener('click', () => document.getElementById('lang-panel').classList.remove('open'));
+    document.getElementById('lang-panel-close').addEventListener('click', () => { playClickSound(); document.getElementById('lang-panel').classList.remove('open'); });
     document.getElementById('lang-panel').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
   }
 
@@ -1692,6 +1692,7 @@
 
   // ===== NOTIFICATION =====
   function notify(title, msg) {
+    playNotifySound();
     const n = document.createElement('div');
     n.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0d0d1a;border:1px solid #059669;border-radius:16px;padding:16px 24px;z-index:9999999;color:#fff;max-width:90%;width:360px;box-shadow:0 20px 40px rgba(0,0,0,0.5);animation:notifyIn 0.3s ease;text-align:center;font-family:sans-serif;';
     n.innerHTML = '<div style="font-weight:900;font-size:15px;margin-bottom:4px;color:#059669">' + title + '</div><div style="font-size:13px;color:#999">' + msg + '</div>';
@@ -1702,126 +1703,226 @@
   notifyStyle.textContent = '@keyframes notifyIn { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }';
   document.head.appendChild(notifyStyle);
 
-  // ===== SOUND EFFECTS (Apple-style) =====
+  // ===== SOUND EFFECTS (Apple-style with variety) =====
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-  function playPurchaseSound() {
+  function playAddToCart() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    // Apple-style success: warm ascending chord + shimmer
-    const notes = [
-      { freq: 523.25, time: 0,    dur: 0.5 },
-      { freq: 659.25, time: 0.08, dur: 0.45 },
-      { freq: 783.99, time: 0.16, dur: 0.4 },
-      { freq: 1046.5, time: 0.24, dur: 0.35 },
-    ];
-    notes.forEach(n => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(n.freq, now + n.time);
-      // Soft attack, warm sustain, gentle release
-      gain.gain.setValueAtTime(0, now + n.time);
-      gain.gain.linearRampToValueAtTime(0.12, now + n.time + 0.03);
-      gain.gain.setValueAtTime(0.12, now + n.time + n.dur * 0.4);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + n.time + n.dur);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now + n.time);
-      osc.stop(now + n.time + n.dur);
-    });
-    // Shimmer overtone — soft high sparkle
-    const shimmer = audioCtx.createOscillator();
-    const shimmerGain = audioCtx.createGain();
-    shimmer.type = 'sine';
-    shimmer.frequency.setValueAtTime(2093, now + 0.2);
-    shimmerGain.gain.setValueAtTime(0, now + 0.2);
-    shimmerGain.gain.linearRampToValueAtTime(0.04, now + 0.22);
-    shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-    shimmer.connect(shimmerGain).connect(audioCtx.destination);
-    shimmer.start(now + 0.2);
-    shimmer.stop(now + 0.6);
-    // Soft click at end
-    const click = audioCtx.createOscillator();
-    const clickGain = audioCtx.createGain();
-    click.type = 'sine';
-    click.frequency.setValueAtTime(1568, now + 0.28);
-    click.frequency.exponentialRampToValueAtTime(800, now + 0.38);
-    clickGain.gain.setValueAtTime(0.06, now + 0.28);
-    clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
-    click.connect(clickGain).connect(audioCtx.destination);
-    click.start(now + 0.28);
-    click.stop(now + 0.38);
-  }
-
-  function playHoverSound() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const now = audioCtx.currentTime;
-    // Apple-style subtle "tick" — like iOS keyboard tap
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1800, now);
-    osc.frequency.exponentialRampToValueAtTime(2200, now + 0.015);
-    osc.frequency.exponentialRampToValueAtTime(1600, now + 0.06);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.035, now + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.06);
-    // Soft overtone
-    const osc2 = audioCtx.createOscillator();
-    const gain2 = audioCtx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(3200, now);
-    gain2.gain.setValueAtTime(0, now);
-    gain2.gain.linearRampToValueAtTime(0.012, now + 0.004);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-    osc2.connect(gain2).connect(audioCtx.destination);
-    osc2.start(now);
-    osc2.stop(now + 0.04);
+    const variation = pick([
+      // V1: Warm ascending triad C-E-G-C
+      () => {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.07);
+          g.gain.setValueAtTime(0, now + i * 0.07);
+          g.gain.linearRampToValueAtTime(0.11, now + i * 0.07 + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.35);
+          o.connect(g).connect(audioCtx.destination); o.start(now + i * 0.07); o.stop(now + i * 0.07 + 0.35);
+        });
+      },
+      // V2: Bright ping + sparkle (like AirDrop)
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(1318.5, now); o.frequency.exponentialRampToValueAtTime(1568, now + 0.06);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.14, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.25);
+        const s = audioCtx.createOscillator(), sg = audioCtx.createGain();
+        s.type = 'sine'; s.frequency.setValueAtTime(2637, now + 0.05);
+        sg.gain.setValueAtTime(0, now + 0.05); sg.gain.linearRampToValueAtTime(0.05, now + 0.06);
+        sg.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        s.connect(sg).connect(audioCtx.destination); s.start(now + 0.05); s.stop(now + 0.35);
+      },
+      // V3: Soft bell tone (like iMessage send)
+      () => {
+        [880, 1108.7, 1318.5].forEach((f, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.08);
+          g.gain.setValueAtTime(0, now + i * 0.08);
+          g.gain.linearRampToValueAtTime(0.1, now + i * 0.08 + 0.015);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+          o.connect(g).connect(audioCtx.destination); o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.3);
+        });
+        const ch = audioCtx.createOscillator(), cg = audioCtx.createGain();
+        ch.type = 'sine'; ch.frequency.setValueAtTime(1760, now + 0.24);
+        cg.gain.setValueAtTime(0, now + 0.24); cg.gain.linearRampToValueAtTime(0.04, now + 0.25);
+        cg.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        ch.connect(cg).connect(audioCtx.destination); ch.start(now + 0.24); ch.stop(now + 0.5);
+      },
+    ]);
+    variation();
   }
 
   function playRemoveSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    // Apple-style gentle "whoosh" down — like iOS delete
-    // Main tone — smooth descending
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.exponentialRampToValueAtTime(440, now + 0.15);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.1, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.2);
-    // Soft echo
-    const osc2 = audioCtx.createOscillator();
-    const gain2 = audioCtx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(660, now + 0.06);
-    osc2.frequency.exponentialRampToValueAtTime(330, now + 0.22);
-    gain2.gain.setValueAtTime(0, now + 0.06);
-    gain2.gain.linearRampToValueAtTime(0.06, now + 0.07);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-    osc2.connect(gain2).connect(audioCtx.destination);
-    osc2.start(now + 0.06);
-    osc2.stop(now + 0.22);
-    // Soft low pop
-    const pop = audioCtx.createOscillator();
-    const popGain = audioCtx.createGain();
-    pop.type = 'sine';
-    pop.frequency.setValueAtTime(220, now + 0.12);
-    pop.frequency.exponentialRampToValueAtTime(110, now + 0.25);
-    popGain.gain.setValueAtTime(0, now + 0.12);
-    popGain.gain.linearRampToValueAtTime(0.08, now + 0.13);
-    popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-    pop.connect(popGain).connect(audioCtx.destination);
-    pop.start(now + 0.12);
-    pop.stop(now + 0.25);
+    pick([
+      // V1: Gentle descending whoosh
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(880, now); o.frequency.exponentialRampToValueAtTime(440, now + 0.15);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.1, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.2);
+        const o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+        o2.type = 'sine'; o2.frequency.setValueAtTime(660, now + 0.06); o2.frequency.exponentialRampToValueAtTime(330, now + 0.22);
+        g2.gain.setValueAtTime(0, now + 0.06); g2.gain.linearRampToValueAtTime(0.06, now + 0.07);
+        g2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        o2.connect(g2).connect(audioCtx.destination); o2.start(now + 0.06); o2.stop(now + 0.22);
+      },
+      // V2: Soft "pop" down (like closing an app)
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.12, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.15);
+        const l = audioCtx.createOscillator(), lg = audioCtx.createGain();
+        l.type = 'sine'; l.frequency.setValueAtTime(150, now + 0.08);
+        lg.gain.setValueAtTime(0, now + 0.08); lg.gain.linearRampToValueAtTime(0.07, now + 0.09);
+        lg.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        l.connect(lg).connect(audioCtx.destination); l.start(now + 0.08); l.stop(now + 0.2);
+      },
+      // V3: Double-click soft delete
+      () => {
+        [0, 0.07].forEach(delay => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(800 - delay * 2000, now + delay);
+          g.gain.setValueAtTime(0, now + delay); g.gain.linearRampToValueAtTime(0.08, now + delay + 0.005);
+          g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.08);
+          o.connect(g).connect(audioCtx.destination); o.start(now + delay); o.stop(now + delay + 0.08);
+        });
+      },
+    ])();
+  }
+
+  function playHoverSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    pick([
+      // V1: Ultra-light tick
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(2000, now);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.03, now + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.04);
+      },
+      // V2: Soft "bloop" (lower)
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(1200, now);
+        o.frequency.exponentialRampToValueAtTime(1600, now + 0.02);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.025, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.05);
+      },
+      // V3: High sparkle
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(3000, now);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.018, now + 0.003);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.035);
+      },
+      // V4: Double-tap
+      () => {
+        [0, 0.04].forEach(d => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(2400, now + d);
+          g.gain.setValueAtTime(0, now + d); g.gain.linearRampToValueAtTime(0.02, now + d + 0.003);
+          g.gain.exponentialRampToValueAtTime(0.001, now + d + 0.03);
+          o.connect(g).connect(audioCtx.destination); o.start(now + d); o.stop(now + d + 0.03);
+        });
+      },
+    ])();
+  }
+
+  function playClickSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    pick([
+      // V1: Soft key press
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(1500, now);
+        o.frequency.exponentialRampToValueAtTime(1000, now + 0.06);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.06, now + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.06);
+      },
+      // V2: Crisp snap
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'triangle'; o.frequency.setValueAtTime(2200, now);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.07, now + 0.003);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.04);
+      },
+    ])();
+  }
+
+  function playNotifySound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    pick([
+      // V1: Gentle two-tone chime (like iOS notification)
+      () => {
+        [880, 1108.7].forEach((f, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.12);
+          g.gain.setValueAtTime(0, now + i * 0.12);
+          g.gain.linearRampToValueAtTime(0.1, now + i * 0.12 + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.3);
+          o.connect(g).connect(audioCtx.destination); o.start(now + i * 0.12); o.stop(now + i * 0.12 + 0.3);
+        });
+      },
+      // V2: Soft ding
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(1046.5, now);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.09, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.4);
+      },
+      // V3: Three ascending notes (success)
+      () => {
+        [659.25, 783.99, 1046.5].forEach((f, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.09);
+          g.gain.setValueAtTime(0, now + i * 0.09);
+          g.gain.linearRampToValueAtTime(0.08, now + i * 0.09 + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.25);
+          o.connect(g).connect(audioCtx.destination); o.start(now + i * 0.09); o.stop(now + i * 0.09 + 0.25);
+        });
+      },
+    ])();
+  }
+
+  function playCartOpenSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    pick([
+      // V1: Soft slide-up
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(400, now); o.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.06, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.12);
+      },
+      // V2: Gentle pop
+      () => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'sine'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(900, now + 0.05);
+        g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.05, now + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        o.connect(g).connect(audioCtx.destination); o.start(now); o.stop(now + 0.1);
+      },
+    ])();
   }
 
   // ===== CART FUNCTIONALITY =====
@@ -1897,7 +1998,19 @@
   // Toggle dropdown
   cartHeaderBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    cartDropdown.classList.toggle('open');
+    const rect = cartHeaderBtn.getBoundingClientRect();
+    const ddWidth = 340;
+    let left = rect.left + rect.width / 2 - ddWidth / 2;
+    if (left < 8) left = 8;
+    if (left + ddWidth > window.innerWidth - 8) left = window.innerWidth - ddWidth - 8;
+    cartDropdown.style.left = left + 'px';
+    cartDropdown.style.right = 'auto';
+    if (cartDropdown.classList.contains('open')) {
+      cartDropdown.classList.remove('open');
+    } else {
+      playCartOpenSound();
+      cartDropdown.classList.add('open');
+    }
   });
   closeCart.addEventListener('click', () => cartDropdown.classList.remove('open'));
   document.addEventListener('click', (e) => {
@@ -1915,8 +2028,8 @@
       e.stopPropagation();
       if (this.classList.contains('added')) return;
 
-      // Play purchase sound
-      playPurchaseSound();
+      // Play add-to-cart sound
+      playAddToCart();
 
       // Mark as added
       this.classList.add('added');
@@ -1979,7 +2092,7 @@
     authOverlay.classList.remove('open');
     document.body.style.overflow = '';
   }
-  authClose.addEventListener('click', closeAuth);
+  authClose.addEventListener('click', () => { playClickSound(); closeAuth(); });
   authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuth(); });
 
   document.getElementById('google-btn').addEventListener('click', async () => {
@@ -1987,7 +2100,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       await fbAuth.signInWithPopup(provider);
       closeAuth();
-      playPurchaseSound();
+      playNotifySound();
     } catch(err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         notify('خطأ', 'حدث خطأ في تسجيل الدخول بـ Google');
@@ -2053,6 +2166,7 @@
   });
 
   document.getElementById('phone-close').addEventListener('click', () => {
+    playClickSound();
     document.getElementById('phone-overlay').classList.remove('open');
     document.getElementById('phone-overlay').style.display = 'none';
   });
@@ -2084,7 +2198,7 @@
       document.getElementById('cart-dropdown-items').innerHTML = '<div class="cart-empty"><i class="fas fa-bag-shopping"></i>السلة فارغة</div>';
       document.getElementById('cart-dropdown-footer').style.display = 'none';
       document.getElementById('cart-dropdown').classList.remove('open');
-      playPurchaseSound();
+      playNotifySound();
       notify('تم الطلب بنجاح!', 'سيتم التواصل معك على ' + phone);
     }).catch(() => {
       notify('خطأ', 'حدث خطأ في حفظ الطلب');
