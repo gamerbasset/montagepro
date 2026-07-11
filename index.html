@@ -748,6 +748,7 @@
         </div>
       </div>
       <button class="lang-btn" id="lang-btn" title="الإعدادات"><i class="fas fa-gear"></i></button>
+      <button class="lang-btn" id="auth-user" title="حسابي" style="display:none"><i class="fas fa-user"></i></button>
       <a href="#products" class="btn btn-primary" data-i18n="header_cta">تسوق الآن</a>
     </div>
   </div>
@@ -2149,10 +2150,16 @@
 
   function updateNavForUser() {
     const userEl = document.getElementById('auth-user');
+    const headerBtn = document.querySelector('header .btn-primary');
     if (currentUser) {
       if (userEl) {
+        userEl.style.display = '';
         userEl.innerHTML = '<i class="fas fa-user"></i> ' + currentUser.username;
         userEl.style.whiteSpace = 'nowrap';
+        userEl.style.width = 'auto';
+        userEl.style.padding = '0 14px';
+        userEl.style.fontSize = '13px';
+        userEl.style.fontWeight = '700';
         userEl.onclick = () => {
           if (confirm('هل تريد تسجيل الخروج؟')) {
             fbAuth.signOut();
@@ -2160,26 +2167,49 @@
           }
         };
       }
+      if (headerBtn) {
+        headerBtn.textContent = currentUser.username;
+        headerBtn.onclick = (e) => { e.preventDefault(); };
+      }
     } else {
       if (userEl) {
-        userEl.innerHTML = '<i class="fas fa-user"></i>';
-        userEl.onclick = () => openAuth('login');
+        userEl.style.display = 'none';
+      }
+      if (headerBtn) {
+        headerBtn.textContent = langData[currentLang]['header_cta'] || 'تسوق الآن';
+        headerBtn.onclick = null;
       }
     }
   }
 
-  // Link buttons to auth modal
+  // Link buttons to auth modal (skip if logged in)
   document.querySelectorAll('a[href="#products"]').forEach(el => {
-    if (el.classList.contains('btn')) el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+    if (el.classList.contains('btn')) el.addEventListener('click', e => {
+      e.preventDefault();
+      if (currentUser) return;
+      openAuth();
+    });
   });
   document.querySelectorAll('.hero-buttons .btn').forEach(el => {
-    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      if (currentUser) return;
+      openAuth();
+    });
   });
   document.querySelectorAll('.cta .btn').forEach(el => {
-    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      if (currentUser) return;
+      openAuth();
+    });
   });
   document.querySelectorAll('.cart-checkout-btn').forEach(el => {
-    el.addEventListener('click', e => { e.preventDefault(); openAuth(); });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      if (!currentUser) { openAuth(); return; }
+      notify('شكراً!', 'سيتم التواصل معك قريباً لإتمام الطلب');
+    });
   });
 </script>
 </body>
