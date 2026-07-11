@@ -739,23 +739,93 @@
       object-fit: contain; background: #000; cursor: pointer;
     }
 
-    .testimonials { padding: 120px 0; position: relative; z-index: 1; }
-    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .testimonials {
+      padding: 120px 0; position: relative; z-index: 1;
+      background: radial-gradient(ellipse at 30% 50%, rgba(5,150,105,0.03) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 50%, rgba(6,182,212,0.03) 0%, transparent 50%);
+      overflow: hidden;
+    }
+    .testimonials::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(5,150,105,0.15), transparent);
+    }
+    .testimonials::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(5,150,105,0.15), transparent);
+    }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
     .testimonial-card {
-      background: #0d0d1a; border-radius: 16px; padding: 28px;
-      border: 1px solid #1a1a30; transition: all 0.4s;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25), 0 2px 6px rgba(0,0,0,0.15);
+      background: linear-gradient(160deg, rgba(20,20,40,0.9), rgba(13,13,26,0.95));
+      border-radius: 20px; padding: 32px 28px 28px;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+      position: relative; overflow: hidden;
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 4px 16px rgba(0,0,0,0.25),
+        0 1px 3px rgba(0,0,0,0.15),
+        inset 0 1px 1px rgba(255,255,255,0.04),
+        inset 0 -1px 2px rgba(0,0,0,0.2);
     }
-    .testimonial-card:hover { border-color: rgba(5,150,105,0.2); transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.35); }
-    .testimonial-card .stars { color: #f59e0b; font-size: 13px; margin-bottom: 12px; letter-spacing: 2px; }
-    .testimonial-card blockquote { color: #999; font-size: 14px; line-height: 1.7; margin-bottom: 16px; }
-    .testimonial-card .author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+      border-radius: 20px 20px 0 0; pointer-events: none;
+    }
+    .testimonial-card::after {
+      content: '\201C'; position: absolute; top: 16px; right: 20px;
+      font-size: 64px; font-weight: 900; line-height: 1;
+      color: rgba(5,150,105,0.08); pointer-events: none; font-family: serif;
+    }
+    .testimonial-card:hover {
+      border-color: rgba(5,150,105,0.25);
+      transform: translateY(-8px);
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.35),
+        0 8px 20px rgba(0,0,0,0.2),
+        0 0 40px rgba(5,150,105,0.06),
+        inset 0 1px 1px rgba(255,255,255,0.08),
+        inset 0 -1px 2px rgba(0,0,0,0.15);
+    }
+    .testimonial-card .stars {
+      display: inline-flex; gap: 3px; margin-bottom: 16px;
+      padding: 4px 10px; border-radius: 8px;
+      background: linear-gradient(160deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+      border: 1px solid rgba(245,158,11,0.2);
+      box-shadow: 0 0 12px rgba(245,158,11,0.08), inset 0 1px 1px rgba(255,255,255,0.1);
+    }
+    .testimonial-card .stars i {
+      color: #f59e0b; font-size: 12px;
+      text-shadow: 0 0 6px rgba(245,158,11,0.5);
+      filter: drop-shadow(0 0 2px rgba(245,158,11,0.3));
+    }
+    .testimonial-card blockquote {
+      color: #aaa; font-size: 14px; line-height: 1.85; margin-bottom: 20px;
+      position: relative; z-index: 1;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .testimonial-card .author {
+      display: flex; align-items: center; gap: 12px;
+      padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);
+    }
     .testimonial-card .author .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 16px;
+      position: relative; flex-shrink: 0;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.3),
+        0 0 0 2px rgba(5,150,105,0.2),
+        0 0 20px rgba(5,150,105,0.1);
     }
-    .testimonial-card .author .name { font-weight: 700; color: #fff; font-size: 14px; }
-    .testimonial-card .author .title { font-size: 12px; color: #666; }
+    .testimonial-card .author .avatar::after {
+      content: ''; position: absolute; inset: -2px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .testimonial-card .author .name {
+      font-weight: 700; color: #fff; font-size: 14px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .testimonial-card .author .title { font-size: 12px; color: #666; margin-top: 2px; }
 
     .cta {
       padding: 120px 0; text-align: center; position: relative; z-index: 1;
@@ -1253,6 +1323,8 @@
 </section>
 
 <section class="testimonials" id="testimonials">
+  <div style="position:absolute;top:20%;left:10%;width:300px;height:300px;background:radial-gradient(circle,rgba(5,150,105,0.06),transparent 70%);border-radius:50%;pointer-events:none;filter:blur(60px)"></div>
+  <div style="position:absolute;bottom:10%;right:15%;width:250px;height:250px;background:radial-gradient(circle,rgba(6,182,212,0.05),transparent 70%);border-radius:50%;pointer-events:none;filter:blur(60px)"></div>
   <div class="container">
     <div class="section-title reveal">
       <h2 data-i18n="testimonials_title">ماذا يقول المبدعون؟</h2>
@@ -1263,7 +1335,7 @@
         <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
         <blockquote data-i18n="t1_quote">"منتجات خرافية! الباقة الاحترافية غيرت شكل قناتي بالكامل. الترانزيشنات ناعمة وسلسة جداً."</blockquote>
         <div class="author">
-          <div class="avatar" style="background:linear-gradient(135deg,#059669,#10b981)">أ</div>
+          <div class="avatar" style="background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 4px 12px rgba(5,150,105,0.3),0 0 0 2px rgba(5,150,105,0.2),0 0 20px rgba(5,150,105,0.1)">أ</div>
           <div><div class="name" data-i18n="t1_name">أحمد السعيد</div><div class="title" data-i18n="t1_title">مونتير محترف — السعودية</div></div>
         </div>
       </div>
@@ -1271,7 +1343,7 @@
         <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
         <blockquote data-i18n="t2_quote">"جربت كثير منتجات لكن مونتاج برو فعلاً مختلف. الجودة والتواصل مع الدعم الفني ممتاز جداً."</blockquote>
         <div class="author">
-          <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">ن</div>
+          <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 4px 12px rgba(245,158,11,0.3),0 0 0 2px rgba(245,158,11,0.2),0 0 20px rgba(245,158,11,0.1)">ن</div>
           <div><div class="name" data-i18n="t2_name">نورة الفهد</div><div class="title" data-i18n="t2_title">صانعة محتوى — الكويت</div></div>
         </div>
       </div>
@@ -1279,7 +1351,7 @@
         <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
         <blockquote data-i18n="t3_quote">"شريت الألتميت بندل، يستحق كل ريال. كل شيء منظم ومصنف وسهل الاستخدام. أنصح وبقوة!"</blockquote>
         <div class="author">
-          <div class="avatar" style="background:linear-gradient(135deg,#14b8a6,#3b82f6)">م</div>
+          <div class="avatar" style="background:linear-gradient(135deg,#14b8a6,#3b82f6);box-shadow:0 4px 12px rgba(20,184,166,0.3),0 0 0 2px rgba(20,184,166,0.2),0 0 20px rgba(20,184,166,0.1)">م</div>
           <div><div class="name" data-i18n="t3_name">محمد الغامدي</div><div class="title" data-i18n="t3_title">منتج فيديو — الإمارات</div></div>
         </div>
       </div>
