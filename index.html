@@ -2538,15 +2538,24 @@
     }
   });
 
-  const countryLengths = { '+213': [9,10], '+212': [9], '+216': [8], '+218': [9,10], '+20': [10], '+966': [9], '+971': [9], '+33': [9], '+1': [10] };
-  const countryFormats = { '+213': '0XXX XX XX XX', '+212': '0XX XX XX XX', '+216': 'XX XXX XXX', '+218': '0XX XXX XXXX', '+20': '0XX XXX XXXX', '+966': '0XX XXX XXXX', '+971': '0XX XXX XXXX', '+33': '0X XX XX XX XX', '+1': '(XXX) XXX-XXXX' };
+  const countries = {
+    '+213': { name: 'الجزائر', flag: '🇩🇿', len: [9,10], format: '0XXX XX XX XX', patterns: [/^0(5|6|7|8)\d{8}$/, /^0(3)\d{7,8}$/], tip: 'يبدأ بـ 05, 06, 07, 08 أو 03' },
+    '+212': { name: 'المغرب', flag: '🇲🇦', len: [9], format: '0XX XX XX XX', patterns: [/^0(6|7|5)\d{8}$/], tip: 'يبدأ بـ 06, 07 أو 05' },
+    '+216': { name: 'تونس', flag: '🇹🇳', len: [8], format: 'XX XXX XXX', patterns: [/^[2-9]\d{7}$/], tip: 'يبدأ بـ 2-9 ومكون من 8 أرقام' },
+    '+218': { name: 'ليبيا', flag: '🇱🇾', len: [9,10], format: '0XX XXX XXXX', patterns: [/^0(9[1-6])\d{7,8}$/, /^0(2|3|4|5|6|7|8)\d{8,9}$/], tip: 'يبدأ بـ 091-096 أو 02-08' },
+    '+20':  { name: 'مصر', flag: '🇪🇬', len: [10], format: '0XX XXX XXXX', patterns: [/^01[0125]\d{8}$/], tip: 'يبدأ بـ 010, 011, 012 أو 015' },
+    '+966': { name: 'السعودية', flag: '🇸🇦', len: [9], format: '0XX XXX XXXX', patterns: [/^0(5\d|7\d)\d{7}$/], tip: 'يبدأ بـ 05 أو 07' },
+    '+971': { name: 'الإمارات', flag: '🇦🇪', len: [9], format: '0XX XXX XXXX', patterns: [/^0(5[0-9]|4)\d{7}$/], tip: 'يبدأ بـ 04 أو 050-059' },
+    '+33':  { name: 'فرنسا', flag: '🇫🇷', len: [9], format: '0X XX XX XX XX', patterns: [/^[1-9]\d{8}$/], tip: 'لا يبدأ بـ 0 ومكون من 9 أرقام' },
+    '+1':   { name: 'أمريكا', flag: '🇺🇸', len: [10], format: '(XXX) XXX-XXXX', patterns: [/^[2-9]\d{9}$/], tip: 'يبدأ بـ 2-9 ومكون من 10 أرقام' }
+  };
   const countrySelect = document.getElementById('country-code');
   const phoneInput = document.getElementById('phone-input');
   const phoneError = document.getElementById('phone-error');
 
   function updatePlaceholder() {
-    const code = countrySelect.value;
-    phoneInput.placeholder = countryFormats[code] || '0555 55 55 55';
+    const c = countries[countrySelect.value];
+    phoneInput.placeholder = c ? c.format : '0555 55 55 55';
   }
   countrySelect.addEventListener('change', updatePlaceholder);
   updatePlaceholder();
@@ -2554,9 +2563,13 @@
   function validatePhone(raw, code) {
     const digits = raw.replace(/\D/g, '');
     if (!digits) return 'أدخل رقم الهاتف';
-    const minLen = countryLengths[code] ? countryLengths[code][0] : 8;
-    const maxLen = countryLengths[code] ? countryLengths[code][1] || minLen : 12;
-    if (digits.length < minLen || digits.length > maxLen) return 'الرقم غير صحيح (يجب أن يكون بين ' + minLen + ' و ' + maxLen + ' أرقام)';
+    const c = countries[code];
+    if (!c) return 'الدولة غير مدعومة';
+    const minLen = c.len[0], maxLen = c.len[1] || minLen;
+    if (digits.length < minLen || digits.length > maxLen) return 'الرقم يجب أن يكون ' + minLen + (minLen !== maxLen ? '-' + maxLen : '') + ' أرقام';
+    const localNum = digits.startsWith('0') ? digits : '0' + digits;
+    const matches = c.patterns.some(p => p.test(localNum));
+    if (!matches) return 'رقم غير صالح لـ ' + c.name + ' — ' + c.tip;
     return '';
   }
 
@@ -2573,7 +2586,8 @@
     const raw = phoneInput.value.trim();
     const err = validatePhone(raw, code);
     if (err) { showError(err); return; }
-    const fullPhone = code + raw.replace(/^0+/, '');
+    const localNum = raw.startsWith('0') ? raw.substring(1) : raw;
+    const fullPhone = code + localNum;
     document.getElementById('phone-overlay').classList.remove('open');
     document.getElementById('phone-overlay').style.display = 'none';
     const total = cartItems.reduce((s, i) => s + i.price, 0);
