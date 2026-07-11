@@ -1575,6 +1575,18 @@
   audioToggle.addEventListener('click', togglePlay);
   document.addEventListener('click', () => { bgAudio.play().catch(()=>{}); }, { once: true });
 
+  // ===== NOTIFICATION =====
+  function notify(title, msg) {
+    const n = document.createElement('div');
+    n.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0d0d1a;border:1px solid #059669;border-radius:16px;padding:16px 24px;z-index:9999999;color:#fff;max-width:90%;width:360px;box-shadow:0 20px 40px rgba(0,0,0,0.5);animation:notifyIn 0.3s ease;text-align:center;font-family:sans-serif;';
+    n.innerHTML = '<div style="font-weight:900;font-size:15px;margin-bottom:4px;color:#059669">' + title + '</div><div style="font-size:13px;color:#999">' + msg + '</div>';
+    document.body.appendChild(n);
+    setTimeout(() => { n.style.opacity = '0'; n.style.transition = 'opacity 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
+  }
+  const notifyStyle = document.createElement('style');
+  notifyStyle.textContent = '@keyframes notifyIn { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }';
+  document.head.appendChild(notifyStyle);
+
   // ===== SOUND EFFECTS =====
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -1686,7 +1698,7 @@
         <img src="${item.img}" alt="${item.name}">
         <div class="cart-item-info">
           <div class="name">${item.name}</div>
-          <div class="price">$${item.price}</div>
+          <div class="price">${item.price.toLocaleString()} DA</div>
         </div>
         <button class="cart-item-remove" data-idx="${idx}" title="إزالة"><i class="fas fa-trash-can"></i></button>
       `;
@@ -1696,7 +1708,7 @@
         el.style.opacity = '1'; el.style.transform = 'translateX(0)';
       });
     });
-    cartTotalPrice.textContent = '$' + total;
+    cartTotalPrice.textContent = total.toLocaleString() + ' DA';
     cartCountEl.textContent = cartItems.length;
     cartCountEl.classList.add('show');
     // Remove button handlers
